@@ -41,3 +41,9 @@ pip install sqlite-web
 python admin.py
 ```
 Reference: Sqlite DB Browser <https://github.com/coleifer/sqlite-web>
+
+## Tips
+add super user
+```shell
+python manage.py createsuperuser --username=admin --email=admin@example.com
+```
