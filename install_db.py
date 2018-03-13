@@ -2,10 +2,13 @@ import os
 import shutil
 
 work_dir = os.path.dirname(os.path.realpath(__file__))
-migration_dir = os.path.join(work_dir, 'pocket_monitor/db/migrations')
-if os.path.exists(migration_dir):
-    shutil.rmtree(migration_dir)
+# db_file = os.path.join(work_dir, 'db.sqlite3')
+# migration_dir = os.path.join(work_dir, 'pocket_monitor/db/migrations')
+# if os.path.exists(db_file):
+# 	os.remove(db_file)
+# if os.path.exists(migration_dir):
+#     shutil.rmtree(migration_dir)
 os.chdir(work_dir)
-os.system('manage.py migrate & '
-          'python manage.py makemigrations db & '
-          'python manage.py migrate db')
+os.system('python manage.py makemigrations & '
+		  'python manage.py makemigrations db & '
+          'python manage.py migrate')

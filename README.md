@@ -12,9 +12,10 @@ Install depends libs
 ```shell
 pip install django
 pip install djangorestframework
+pip install django-filter
 ```
 
-Install\Refresh db
+Install\Upgrade db
 
 ```shell
 python install_db.py
