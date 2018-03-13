@@ -1,11 +1,11 @@
 # pocket_monitor
 ## Code flow:
-urls -> db.urls -> db.views -> db.serializers -> db.models
-urls: expose urls
-db.urls: define the exposed rest apis
-db.views: define the views mapping to the exposed rest apis
-db.serializers -> serialize/deserialize model between views and backend models
-db.models -> backend models associated to db tables.
+### urls -> db.urls -> db.views -> db.serializers -> db.models
+1. urls: expose urls
+2. db.urls: define the exposed rest apis
+3. db.views: define the views mapping to the exposed rest apis
+4. db.serializers -> serialize/deserialize model between views and backend models
+5. db.models -> backend models associated to db tables.
 
 ## Set up
 Install depends libs
