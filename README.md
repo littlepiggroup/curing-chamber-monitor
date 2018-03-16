@@ -1,4 +1,7 @@
 # pocket_monitor
+## 项目结构
+* pocket_monitor目录是Django的project, pocket_monitor/db是Django的app. 一个project可以包含多个app. 
+
 ## Code flow:
 ### urls -> db.urls -> db.views -> db.serializers -> db.models
 1. urls: expose urls
