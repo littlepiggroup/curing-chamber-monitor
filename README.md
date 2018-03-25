@@ -1,7 +1,7 @@
 # curing chamber monitor
 
 ## Build & Test Status
-* TODO
+* [![Build Status](https://travis-ci.org/littlepiggroup/curing-chamber-monitor.svg?branch=integration)](https://travis-ci.org/littlepiggroup/curing-chamber-monitor)
 
 ## 项目结构
 * curing chamber monitor目录是Django的project, ccm/ccmdb是Django的app. 一个project可以包含多个app.
