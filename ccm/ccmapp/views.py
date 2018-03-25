@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import django_filters.rest_framework
 from rest_framework import viewsets,filters
-from pocket_monitor.db import models, serializers
+from ccm.ccmapp import models, serializers
 
 # Create your views here.
 
@@ -14,4 +14,4 @@ class ProjectViewSet(viewsets.ModelViewSet):
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
     filter_fields = ('name', 'code')
     search_fields = ('name', )
-    ordering_fields = ('code', 'name')
+    ordering_fields = ('code',)
