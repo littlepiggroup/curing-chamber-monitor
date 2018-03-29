@@ -15,3 +15,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     filter_fields = ('name', 'code')
     search_fields = ('name', )
     ordering_fields = ('code',)
+
+
+class CompanyViewSet(viewsets.ModelViewSet):
+    queryset = models.Company.objects.all()
+    serializer_class = serializers.CompanySerializer
