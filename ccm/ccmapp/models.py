@@ -6,38 +6,98 @@ from django.db import models
 # Create your models here.
 
 
-# Company and projects
-class Company(models.Model):
-    name = models.CharField(max_length=100)
-    created = models.DateTimeField(auto_now_add=True)
+class BuildingCompany(models.Model):
+    instance_id = models.CharField(max_length=100, unique=True, null=True)
+    name = models.CharField(max_length=100, unique=True)
+    disabled = models.BooleanField(default=False)
+    added_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-added_time',)
+
+
+class BuildingCompanyUser(models.Model):
+    instance_id = models.CharField(max_length=100, unique=True, null=True)
+    login_name = models.CharField(max_length=100, unique=True)
+    building_company = models.ForeignKey(BuildingCompany, related_name='users', null=True)
+    disabled = models.BooleanField(default=False)
+    added_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-added_time',)
 
 
 class Project(models.Model):
-    name = models.CharField(max_length=20)
-    created = models.DateTimeField(auto_now_add=True)
-    title = models.CharField(max_length=100, blank=True, default='')
-    code = models.TextField()
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    instance_id = models.CharField(max_length=100, unique=True, null=True)
+    nature = models.CharField(max_length=20, null=True)
+    num = models.CharField(max_length=100, null=True)
+    region = models.CharField(max_length=100, null=True)
+    address = models.CharField(max_length=256, null=True)
+    status = models.IntegerField(null=True)
+    create_time = models.DateTimeField(null=True)
+    last_edit_time = models.DateTimeField(null=True)
+    building_company = models.ForeignKey(BuildingCompany, related_name='projects')
+    added_time = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ('-created', 'code')
+        ordering = ('-added_time',)
 
 
-# Sample website credential, sample, sample alert
-class SampleWebSiteCredential(models.Model):
-    user = models.CharField(max_length=10)
-    password = models.CharField(max_length=10)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+class ProjectName(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    project = models.ForeignKey(Project, related_name='names')
+    added_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-added_time', )
+
+
+class Contract(models.Model):
+    sign_number = models.CharField(max_length=100, unique=True)
+    serial_num = models.CharField(max_length=100)
+    project = models.ForeignKey(Project, related_name='contracts', db_column='project_id')
+    checked_date_time = models.DateTimeField()
+    checked = models.BooleanField()
+    added_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-sign_number',)
 
 
 class Sample(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    #TODO: enum -- shui ni, hun ning tu, ...
-    sample_type = models.CharField(max_length=20)
-    yanghu_tiaojian = models.CharField(max_length=50)
-    result = models.CharField(max_length=50)
-    # >= 0  %
-    percentage = models.IntegerField()
+    instance_id = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
+    num = models.CharField(max_length=100)
+    item_id = models.CharField(max_length=100)
+    item_name = models.CharField(max_length=100)
+    # project = models.ForeignKey(Project, related_name='project_id')
+    contract = models.ForeignKey(Contract, related_name='+')
+    count = models.IntegerField()
+    status = models.IntegerField()
+    status_str = models.CharField(max_length=20)
+    regular = models.BooleanField()
+    kind_id = models.CharField(max_length=100)
+    kind_name = models.CharField(max_length=100)
+    detection_unit_member_name = models.CharField(max_length=100)
+    report_num = models.CharField(max_length=100)
+    core_code_id = models.CharField(max_length=100)
+    core_code_id_end = models.CharField(max_length=100)
+    project_part = models.CharField(max_length=100)
+    spec = models.CharField(max_length=100)
+    grade = models.CharField(max_length=20)
+    exam_result = models.CharField(max_length=100)
+    hnt_yhtj = models.CharField(max_length=100)
+    age_time_str = models.CharField(max_length=20)
+    # report_date = models.DateTimeField(blank=True)
+    # detection_date = models.DateTimeField(blank=True)
+    # molding_date = models.DateTimeField(blank=True)
+    report_date_str = models.CharField(max_length=100)
+    detection_date_str = models.CharField(max_length=100)
+    molding_date_str = models.CharField(max_length=100)
+    added_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('item_name', 'name')
 
 
 class SampleAlert(models.Model):
@@ -96,7 +156,3 @@ class TempHumdtyAlert(models.Model):
 
 
 # TODO: Alert notification and subscribe.
-
-
-
-
