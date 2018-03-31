@@ -13,7 +13,7 @@ class BuildingCompany(models.Model):
     added_time = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ('-added_time',)
+        ordering = ('id',)
 
 
 class BuildingCompanyUser(models.Model):
@@ -24,7 +24,7 @@ class BuildingCompanyUser(models.Model):
     added_time = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ('-added_time',)
+        ordering = ('id',)
 
 
 class Project(models.Model):
@@ -40,7 +40,7 @@ class Project(models.Model):
     added_time = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ('-added_time',)
+        ordering = ('id',)
 
 
 class ProjectName(models.Model):
@@ -97,7 +97,7 @@ class Sample(models.Model):
     added_time = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ('item_name', 'name')
+        ordering = ('id',)
 
 
 class SampleAlert(models.Model):

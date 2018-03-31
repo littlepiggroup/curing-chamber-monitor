@@ -59,5 +59,5 @@ class ProjectApiTests(APITestCase):
         name_count = ProjectName.objects.values('id').count()
         self.assertEqual(4, name_count)
         response = self.client.get(url)
-        self.assertEquals(building_company.id, response.data['results'][1]['building_company'])
-        self.assertEquals(building_company2.id, response.data['results'][0]['building_company'])
+        self.assertEquals(building_company.id, response.data['results'][0]['building_company'])
+        self.assertEquals(building_company2.id, response.data['results'][1]['building_company'])
