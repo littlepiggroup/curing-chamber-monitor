@@ -87,7 +87,8 @@ class Sync(object):
         :return:
         """
         logger.info("Sync for building company %d" % building_company.id)
-        building_company_users = models.BuildingCompanyUser.objects.filter(building_company_id=building_company.id)
+        building_company_users = models.BuildingCompanyUser.objects.filter(building_company_id=building_company.id,
+                                                                           disabled=False)
         for building_company_user in building_company_users:
             try:
                 if building_company.instance_id and building_company_user.instance_id:
