@@ -110,18 +110,27 @@ class SampleAlert(models.Model):
     updated_by = models.CharField(max_length=10)
 
 
-# Camera, video and video_alert
+# ----------------------------- Start: video related models -----------------------------
+class EzvizAccount(models.Model):
+    user_name = models.CharField(max_length=50)
+    app_key = models.CharField(max_length=200)
+    secret = models.CharField(max_length=200)
+
+
 class Camera(models.Model):
+    ezviz_account = models.ForeignKey(EzvizAccount, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    device_number = models.CharField(max_length=50)
+    device_serial_number = models.CharField(max_length=50)
+    #Like: rtmp://rtmp.open.ys7.com/openlive/bfed2855f58d4dd6891e670060540a7a
+    rtmp_address = models.CharField(max_length=200)
 
 
 class Video(models.Model):
     camera = models.ForeignKey(Camera, on_delete=models.CASCADE)
     #In seconds
-    duration = models.IntegerField()
+    save_abs_path = models.CharField(max_length=200)
     # relative url
-    url = models.CharField(max_length=50)
+    url_path = models.CharField(max_length=50)
 
 
 # video alert may be created by user.
@@ -135,6 +144,10 @@ class VideoAlert(models.Model):
     update_time = models.DateTimeField()
     updated_by = models.CharField(max_length=10)
 
+# ----------------------------- End: video related models -----------------------------
+
+
+# ----------------------------- Start: Temperature/Humidity related models -----------------------------
 
 # Sensor, temperature_humidity data, sensor_alert
 class Sensor(models.Model):
@@ -142,6 +155,7 @@ class Sensor(models.Model):
     device_number = models.CharField(max_length=50)
     #TODO: enum -- temperature, humidity.
     sensor_type = models.CharField(max_length=20)
+
 
 class TempHumdtyData(models.Model):
     pass
@@ -154,5 +168,11 @@ class TempHumdtyAlert(models.Model):
     update_time = models.DateTimeField()
     updated_by = models.CharField(max_length=10)
 
+# ----------------------------- End: Temperature/Humidity related models -----------------------------
 
-# TODO: Alert notification and subscribe.
+
+# TODO: Alert notification and subscribe (by project)
+class AlertSubscriber(models.Model):
+    source_project = models.ForeignKey(Project)
+    # TODO: May be a phone number or wechat id? or a user id?
+    subscriber = models.CharField(max_length=50)
