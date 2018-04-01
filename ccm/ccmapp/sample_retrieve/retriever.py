@@ -13,7 +13,7 @@ from httplib import HTTPException
 import logging
 from ccm.common import utils, http
 
-logger = logging.getLogger("mo.retriever")
+logger = logging.getLogger("samples.retriever")
 
 
 class SoapRequest(object):
