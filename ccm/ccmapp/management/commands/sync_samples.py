@@ -8,9 +8,9 @@ import traceback
 from django.core.management.base import BaseCommand
 
 from ccm.ccmapp import models
-from ccm.ccmapp.mo.retriever import ProjectRetriever, ContractRetriever, SampleRetriever, UserInfoRetriever
+from ccm.ccmapp.sample_retrieve.retriever import ProjectRetriever, ContractRetriever, SampleRetriever, UserInfoRetriever
 
-logger = logging.getLogger("mo.sync")
+logger = logging.getLogger("samples.sync")
 
 
 class Sync(object):
@@ -155,21 +155,20 @@ class Sync(object):
             logger.info("Sync project %d" % project.id)
             if project.instance_id:
                 pre_project_status = project.status
-                if project.status != int(project_item["_ProjectStatus"]):
+                if project.instance_id != project_item["_Id"] or project.status != int(project_item["_ProjectStatus"]):
+                    project.instance_id = project_item["_Id"]
                     project.status = int(project_item["_ProjectStatus"])
                     project.save()
-                    logger.info("Update project %d set status from %d to %d."
-                                % (project.id, pre_project_status, project.status))
             else:
-                project.instance_id=project_item["_Id"]
-                project.nature=project_item["_ProjectNature"]
-                project.num=project_item["_ProjectNo"]
-                project.region=project_item["_ProjectRegion"]
-                project.address=project_item["_ProjectAddress"]
-                project.status=project_item["_ProjectStatus"]
-                project.create_time=project_item["_CreateDateTime"]
-                project.last_edit_time=project_item["_LastEditDateTime"]
-                project.building_company_id=building_company.id
+                project.instance_id = project_item["_Id"]
+                project.nature = project_item["_ProjectNature"]
+                project.num = project_item["_ProjectNo"]
+                project.region = project_item["_ProjectRegion"]
+                project.address = project_item["_ProjectAddress"]
+                project.status = project_item["_ProjectStatus"]
+                project.create_time = project_item["_CreateDateTime"]
+                project.last_edit_time = project_item["_LastEditDateTime"]
+                project.building_company_id = building_company.id
                 project.save()
             # 项目还未完成, 需要同步项目的合同和试件
             if pre_project_status == 0:
@@ -208,7 +207,7 @@ class Sync(object):
                                                  page_size=600)
             raw_data = self._get_raw_data(rep)
             if raw_data:
-                self._do_samples_sync(contract, raw_data)
+                self._do_samples_sync(project, contract, raw_data)
                 if "page_info" in rep["result"] and "page_count" in rep["result"]["page_info"]:
                     page_count = rep["result"]["page_info"]["page_count"]
                     left_pages = page_count - 1
@@ -220,36 +219,33 @@ class Sync(object):
                                                              page_size=600)
                         raw_data = self._get_raw_data(rep)
                         if raw_data:
-                            self._do_samples_sync(contract, raw_data)
+                            self._do_samples_sync(project, contract, raw_data)
                         left_pages -= 1
         except Exception as e:
             exstr = traceback.format_exc()
             logger.error('Sync page %d of samples error: %s %s' % (current_page, type(e), exstr))
 
-    def _do_samples_sync(self, contract, raw_data):
+    def _do_samples_sync(self, project, contract, raw_data):
         for sample_item in raw_data:
             try:
                 sample = models.Sample.objects.get(instance_id=sample_item["_Id"])
-                pre_project_status = sample.status
-                if sample.status != int(sample_item["_Sample_Status"]):
+                if sample.exam_result != sample_item["_Exam_Result"] \
+                        or sample.status != int(sample_item["_Sample_Status"]):
+                    sample.exam_result = sample_item["_Exam_Result"]
                     sample.status = int(sample_item["_Sample_Status"])
                     sample.status_str = sample_item["_SampleStatusStr"]
                     sample.save()
-                    logger.info("Update sample %s set status from %d to %d."
-                                % (sample_item["_Id"], pre_project_status, sample.status))
             except models.Sample.DoesNotExist:
                 sample = models.Sample.objects.create(instance_id=sample_item["_Id"],
                                                       name=sample_item["_SampleName"],
                                                       num=sample_item["_SampleNo"],
-                                                      item_id=sample_item["_ItemID"],
                                                       item_name=sample_item["_ItemName"],
-                                                      # project=project,
+                                                      project=project,
                                                       contract=contract,
                                                       count=sample_item["_SampleCount"],
                                                       status=sample_item["_Sample_Status"],
                                                       status_str=sample_item["_SampleStatusStr"],
                                                       regular=bool(sample_item["_Sample_Regular"]),
-                                                      kind_id=sample_item["_KindID"],
                                                       kind_name=sample_item["_KindName"],
                                                       detection_unit_member_name=sample_item["_MemberCode"],
                                                       report_num=sample_item["_ReportNumber"],

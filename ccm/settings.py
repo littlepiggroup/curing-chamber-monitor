@@ -48,12 +48,12 @@ LOGGING = {
         'null': {
             'class': 'logging.NullHandler',
         },
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-            'include_html': True,
-            'formatter': 'standard'
-        },
+        # 'mail_admins': {
+        #     'level': 'ERROR',
+        #     'class': 'django.utils.log.AdminEmailHandler',
+        #     'include_html': True,
+        #     'formatter': 'standard'
+        # },
         # 'file_handler': {
         #      'level': 'DEBUG',
         #      'class': 'logging.handlers.TimedRotatingFileHandler',
@@ -73,10 +73,10 @@ LOGGING = {
             'encoding': 'UTF-8',
             'formatter': 'standard'
         },
-        'mo_log': {
+        'samples_log': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, "mo.log"),
+            'filename': os.path.join(BASE_DIR, "samples.log"),
             'maxBytes': 1024 * 1024 * 5,  # 5 MB
             'backupCount': 5,
             'encoding': 'UTF-8',
@@ -93,14 +93,14 @@ LOGGING = {
         'django': {
             'handlers': ['server_log', 'console'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'ERROR'),
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': os.getenv('DJANGO_REQUEST_LOG_LEVEL', 'ERROR'),
-            'filters': ['require_debug_false'],
             'propagate': False,
         },
+        # 'django.request': {
+        #     'handlers': ['mail_admins'],
+        #     'level': os.getenv('DJANGO_REQUEST_LOG_LEVEL', 'ERROR'),
+        #     'filters': ['require_debug_false'],
+        #     'propagate': False,
+        # },
         'django.security.DisallowedHost': {
             'handlers': ['null'],
             'propagate': False,
@@ -108,12 +108,12 @@ LOGGING = {
         'ccm': {
             'handlers': ['server_log', 'console'],
             'level': os.getenv('CCM_LOG_LEVEL', 'DEBUG'),
-            'propagate': True
+            'propagate': False
         },
-        'mo': {
-            'handlers': ['mo_log', 'console'],
-            'level': os.getenv('MO_LOG_LEVEL', 'DEBUG'),
-            'propagate': True
+        'samples': {
+            'handlers': ['samples_log', 'console'],
+            'level': os.getenv('RETRIEVE_LOG_LEVEL', 'DEBUG'),
+            'propagate': False
         },
     }
 }
@@ -231,8 +231,7 @@ REST_FRAMEWORK = {
     # ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-
-        #  Disable BrowsableAPI
+        #  Enable BrowsableAPI
         'rest_framework.renderers.BrowsableAPIRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
@@ -244,27 +243,26 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend', 'rest_framework.filters.OrderingFilter'
     ),
     'DEFAULT_PAGINATION_CLASS': 'ccm.ccmapp.pagination.CustomizedPageNumberPagination',
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 10
 }
 
 # admin email settings
-EMAIL_HOST = 'smtp.sina.com.cn'
-EMAIL_PORT = 25
-EMAIL_HOST_USER = 'sender@example.com'
-EMAIL_HOST_PASSWORD = 'xxxxx'
-EMAIL_SUBJECT_PREFIX = ''
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = False
-EMAIL_TIMEOUT = 60
-EMAIL_SSL_KEYFILE = None
-EMAIL_SSL_CERTFILE = None
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-DEFAULT_CHARSET = 'UTF-8'
-EMAIL_USE_LOCALTIME = ''
-# display sender
-SERVER_EMAIL = 'Server <sender@example.com>'
-
+# EMAIL_HOST = 'smtp.sina.com.cn'
+# EMAIL_PORT = 25
+# EMAIL_HOST_USER = 'sender@example.com'
+# EMAIL_HOST_PASSWORD = 'xxxxx'
+# EMAIL_SUBJECT_PREFIX = ''
+# EMAIL_USE_TLS = False
+# EMAIL_USE_SSL = False
+# EMAIL_TIMEOUT = 60
+# EMAIL_SSL_KEYFILE = None
+# EMAIL_SSL_CERTFILE = None
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# DEFAULT_CHARSET = 'UTF-8'
+# EMAIL_USE_LOCALTIME = ''
+# # display sender
+# SERVER_EMAIL = 'Server <sender@example.com>'
 # receiver
-ADMINS = (
-    ('Admin', 'admin@example.com'),
-)
+# ADMINS = (
+#     ('Admin', 'admin@example.com'),
+# )
