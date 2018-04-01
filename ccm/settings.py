@@ -132,7 +132,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_filters',
-    'ccm.ccmapp',
+    'ccm.ccmapp'
 ]
 
 MIDDLEWARE = [
@@ -216,6 +216,8 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+# STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
@@ -231,7 +233,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
 
         #  Disable BrowsableAPI
-        # 'rest_framework.renderers.BrowsableAPIRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework.parsers.JSONParser',
