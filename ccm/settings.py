@@ -132,7 +132,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_filters',
+    'django_crontab',
     'ccm.ccmapp'
+]
+
+# Before python manage.py, you may have to run python manage.py crontab add
+CRONJOBS = [
+    ('0 8 * * *', 'ccm.ccmapp.cron.update_samples_task')
 ]
 
 MIDDLEWARE = [
