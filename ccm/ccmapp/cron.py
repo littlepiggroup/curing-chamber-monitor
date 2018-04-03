@@ -1,7 +1,9 @@
 import datetime
 
 from ccm.ccmapp.samplemgr.update_samples import Sync
+from ccm.ccmapp.videomgr import videomgr
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -12,3 +14,7 @@ def update_samples_task():
     logger.info("update_samples_task completed at " + str(datetime.datetime.now()))
 
 
+def fetch_video_task():
+    logger.info("fetch_video_task triggered at " + str(datetime.datetime.now()))
+    videomgr.collect()
+    logger.info("fetch_video_task completed at " + str(datetime.datetime.now()))

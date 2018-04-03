@@ -138,7 +138,8 @@ INSTALLED_APPS = [
 
 # Before python manage.py, you may have to run python manage.py crontab add
 CRONJOBS = [
-    ('0 8 * * *', 'ccm.ccmapp.cron.update_samples_task')
+    ('0 8 * * *', 'ccm.ccmapp.cron.update_samples_task'),
+    ('0 9 * * *', 'ccm.ccmapp.cron.fetch_video_task')
 ]
 
 MIDDLEWARE = [

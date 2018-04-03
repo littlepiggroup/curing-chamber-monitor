@@ -3,8 +3,6 @@ from __future__ import unicode_literals
 
 from django.db import models
 
-# Create your models here.
-
 
 class BuildingCompany(models.Model):
     instance_id = models.CharField(max_length=100, unique=True, null=True)
@@ -107,12 +105,18 @@ class SampleAlert(models.Model):
     update_time = models.DateTimeField()
     updated_by = models.CharField(max_length=10)
 
+    class Meta:
+        ordering = ('id',)
+
 
 # ----------------------------- Start: video related models -----------------------------
 class EzvizAccount(models.Model):
     user_name = models.CharField(max_length=50)
     app_key = models.CharField(max_length=200)
     secret = models.CharField(max_length=200)
+
+    class Meta:
+        ordering = ('id',)
 
 
 class Camera(models.Model):
@@ -122,6 +126,9 @@ class Camera(models.Model):
     #Like: rtmp://rtmp.open.ys7.com/openlive/bfed2855f58d4dd6891e670060540a7a
     rtmp_address = models.CharField(max_length=200)
 
+    class Meta:
+        ordering = ('id',)
+
 
 class Video(models.Model):
     camera = models.ForeignKey(Camera, on_delete=models.CASCADE)
@@ -129,6 +136,9 @@ class Video(models.Model):
     save_abs_path = models.CharField(max_length=200)
     # relative url
     url_path = models.CharField(max_length=50)
+
+    class Meta:
+        ordering = ('id',)
 
 
 # video alert may be created by user.
@@ -141,6 +151,9 @@ class VideoAlert(models.Model):
     created_by = models.CharField(max_length=10)
     update_time = models.DateTimeField()
     updated_by = models.CharField(max_length=10)
+
+    class Meta:
+        ordering = ('id',)
 
 # ----------------------------- End: video related models -----------------------------
 

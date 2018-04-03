@@ -55,6 +55,7 @@ class SampleViewSet(viewsets.ModelViewSet):
 
 # -------------------- Start: video related views --------------------
 
+
 class EzvizAccountViewSet(viewsets.ModelViewSet):
     queryset = EzvizAccount.objects.all()
     serializer_class = EzvizAccountSerializer
@@ -70,3 +71,6 @@ class CameraViewSet(viewsets.ModelViewSet):
 class VideoViewSet(viewsets.ModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
+    filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
+    filter_fields = ('camera', )
+
