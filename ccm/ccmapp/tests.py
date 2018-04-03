@@ -12,36 +12,87 @@ from rest_framework.test import APITestCase
 from .models import Project, BuildingCompany, ProjectName, Camera, EzvizAccount, Video
 
 
-# Create your tests here.
-#HowTO: https://scotch.io/tutorials/build-a-rest-api-with-django-a-test-driven-approach-part-1
-
-# Test db behavior
-class ProjectTest(TestCase):
-    def test_project_db(self):
-        building_company = BuildingCompany(name="test_company")
-        building_company.save()
-        old_count = Project.objects.values('id').count()
-        new_project = Project(building_company_id=building_company.id)
-        new_project.save()
-        new_count = Project.objects.values('id').count()
-        self.assertNotEqual(old_count, new_count)
-
-
-# Test API behavior
 class ProjectApiTests(APITestCase):
-    def test_create_project(self):
-        """
-        Ensure we can create a new project object.
-        """
-        building_company = BuildingCompany(name="test_company")
-        building_company.save()
+
+    def test_create_company_project_api(self):
+        # Step 1: add building_company_users as the source to fetch data from sample website.
+        req_body = {"login_name": "login_name_to_sample_website"}
+        url = reverse('building_company_user-list')
+        resp = self.client.post(url, req_body, format='json')
+        self.assertEqual(status.HTTP_201_CREATED, resp.status_code)
+
+        # Step 2: create building company with name
+        req_body = {'name': 'microsoft'}
+        url = reverse('building_company-list')
+        resp = self.client.post(url, req_body, format='json')
+        self.assertEqual(status.HTTP_201_CREATED, resp.status_code)
+
+        # Step 3: add projects (identified by names) to building company.
         url = reverse('project-list')
-        data = {'names': [{"name": 'testname1'}, {"name": "testname2"}], 'building_company': building_company.id}
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['building_company'], data['building_company'])
+        req_body = {'names': [{"name": 'CenturyParkProject'}, {"name": "ShiJiGongYuanProject"}], 'building_company': 1}
+        resp = self.client.post(url, req_body, format='json')
+        self.assertEqual(status.HTTP_201_CREATED, resp.status_code)
+        self.assertEqual(resp.data['building_company'], req_body['building_company'])
         name_count = ProjectName.objects.values('id').count()
         self.assertEqual(2, name_count)
+
+        # Note: after these operations, there will be crontab task to run samplemgr.update_samples.Sync.sync to
+        # fetch the sample data from sample website. And you can also run manually, python manage.py syc_samples to
+        # fetch data.
+
+    def test_video_related_api(self):
+        # Prepare data
+        self.test_create_company_project_api()
+
+        # All data in req_body are from a given ezviz account.
+        req_body = {"user_name": "13788889999", 'app_key': 'app_key_val', 'secret': 'secret_val'}
+        url = reverse('ezviz_account-list')
+        resp = self.client.post(url, req_body, format='json')
+        self.assertEqual(status.HTTP_201_CREATED, resp.status_code)
+
+        # TODO: for now, rtmp_address is mandatory. In future, it should be fetched automatically.
+        # TODO: The rtmp address is also got from ezviz website (after login and bind the camera).
+        req_body = {'ezviz_account':1, 'project': 1,
+                    'device_serial_number': "762881292",
+                    'rtmp_address': 'rtmp://rtmp.open.ys7.com/openlive/bfed2855f58d4dd6891e670060540a7a'
+        }
+        url = reverse('camera-list')
+        resp = self.client.post(url, req_body, format='json')
+        self.assertEqual(status.HTTP_201_CREATED, resp.status_code)
+
+        # Note: after above operations, there should be crontab to record the video at 8:00 am on everyday.
+        # (TODO: record randomly (8,9,10).  And you can also run 'ptyhon manage.py collect_videos' to save video
+        # for every camera. The video file will be created  ccm/ccmapp/static/videos/. And you can get at url
+        # <IP>/static/videos/<video_name>.mp4. You can fetch the path 'static/videos/<video_name>.mp4' from
+        # models.Video.url_path. You can filter videos via Video's camera property.
+
+    @unittest.skip("Need run manually. And setup camera before.")
+    def test_add_camera(self):
+
+        building_company = BuildingCompany(name="test_company")
+        building_company.save()
+
+        new_project = Project(building_company_id=building_company.id)
+        new_project.save()
+
+        ezviz_account = EzvizAccount(user_name='13788889999', app_key="app_key_val", secret="secret_val")
+        ezviz_account.save()
+
+        camera = Camera(ezviz_account=ezviz_account, project = new_project, device_serial_number="762881292",
+                        rtmp_address='rtmp://rtmp.open.ys7.com/openlive/bfed2855f58d4dd6891e670060540a7a')
+        camera.save()
+        new_cameras = Camera.objects.all()
+        self.assertEqual('762881292', new_cameras[0].device_serial_number)
+        self.assertEqual('rtmp://rtmp.open.ys7.com/openlive/bfed2855f58d4dd6891e670060540a7a',
+                         new_cameras[0].rtmp_address)
+        self.assertEqual(1, new_cameras[0].project.id)
+
+        from ccm.ccmapp.videomgr import videomgr
+        videomgr.collect()
+        videos = Video.objects.all()
+        self.assertEqual(1, len(videos))
+        video = videos[0]
+        self.assertTrue(video.url_path.find('static/videos/1-762881292') == 0)
 
     def test_project_ordering(self):
         building_company = BuildingCompany(name="test_company")
@@ -90,31 +141,7 @@ class ProjectApiTests(APITestCase):
         # print response.data
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    @unittest.skip("Need run manually. And setup camera before.")
-    def test_add_camera(self):
 
-        # user input: device_number, ezviz user/name password.
-        building_company = BuildingCompany(name="test_company")
-        building_company.save()
-        new_project = Project(building_company_id=building_company.id)
-        new_project.save()
-        ezviz_account = EzvizAccount(user_name='13788889999', app_key="app_key_val", secret="secret_val")
-        ezviz_account.save()
-        camera = Camera(ezviz_account=ezviz_account, project = new_project, device_serial_number="762881292",
-                        rtmp_address='rtmp://rtmp.open.ys7.com/openlive/bfed2855f58d4dd6891e670060540a7a')
-        camera.save()
-        new_cameras = Camera.objects.all()
-        self.assertEqual('762881292', new_cameras[0].device_serial_number)
-        self.assertEqual('rtmp://rtmp.open.ys7.com/openlive/bfed2855f58d4dd6891e670060540a7a',
-                         new_cameras[0].rtmp_address)
-        self.assertEqual(1, new_cameras[0].project.id)
-
-        from ccm.ccmapp.videomgr import videomgr
-        videomgr.collect()
-        videos = Video.objects.all()
-        self.assertEqual(1, len(videos))
-        video = videos[0]
-        self.assertTrue(video.url_path.find('static/videos/1-762881292') == 0)
 
 
     def test_upload_video(self):
@@ -125,3 +152,14 @@ class ProjectApiTests(APITestCase):
         # TODO.
         pass
 
+
+# Test db behavior
+class ProjectTest(TestCase):
+    def test_project_db(self):
+        building_company = BuildingCompany(name="test_company")
+        building_company.save()
+        old_count = Project.objects.values('id').count()
+        new_project = Project(building_company_id=building_company.id)
+        new_project.save()
+        new_count = Project.objects.values('id').count()
+        self.assertNotEqual(old_count, new_count)

@@ -89,4 +89,5 @@ class VideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Video
         fields = '__all__'
+        depth = 1
 # ----------------------------- End: video related code -----------------------------
