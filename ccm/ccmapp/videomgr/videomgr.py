@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 import datetime
 import random
 import sched
@@ -67,11 +70,42 @@ def collect():
 
 
 class EzvizClient(object):
-    def __init__(self, access_token, ezviz_url="https://open.ys7.com"):
-        self.ezviz_url = ezviz_url
-        self.access_token = access_token
+    def __init__(self, ezviz_account_model):
+        self.ezviz_url = "https://open.ys7.com"
+        # https://open.ys7.com/doc/zh/book/index/user.html
+        # 获取到的accessToken有效期是7天
+        # if ezviz_account_model.access_token is None:
+        #     pass
+        access_token_and_expire_time = self.fetch_access_token(ezviz_account_model.app_key,
+                                                               ezviz_account_model.secret)
+        ezviz_account_model.access_token = access_token_and_expire_time[0]
+        ezviz_account_model.access_token_expire_time = access_token_and_expire_time[1]
+        ezviz_account_model.save()
+        self.access_token = ezviz_account_model.access_token
+
+    def fetch_access_token(self, app_key, secret):
+        pass
+
+        form_params = {'appKey': app_key,
+                   'appSecret': secret}
+        url = "%s%s" % (self.ezviz_url, '/api/lapp/token/get')
+        resp = requests.post(url, data=form_params)
+        parsed_body = json.loads(resp.text)
+        rc = parsed_body['code']
+        msg = parsed_body['msg']
+        expire_time = parsed_body['data']['expireTime']
+        access_token = parsed_body['data']['accessToken']
+        if rc != '200':
+            err_msg = "Error when fetch access key. code: %s, message: %s " % (rc,msg)
+            logger.error(err_msg)
+            raise Exception(err_msg)
+        return (access_token, expire_time)
 
     def get_rtmp_adr_smooth(self, device_serial_number):
+        x = True
+        if x:
+            return 'fake_rtmp'
+
         url = "%s%s" % (self.ezviz_url, '/api/lapp/live/address/get')
         logger.info("Send request to %s" % url)
         # accessToken=at.1mizlvc9c533bg3rblm1vd9c32819jpw-8kxg6vg1ii-08xyaou-zjsy00jpp&source=762881292%3A1
@@ -93,6 +127,8 @@ class EzvizClient(object):
                 target_data_item = data_item
                 break
         return target_data_item['rtmp']
+    def _get_access_token(self):
+        pass
 
 
 def ezviz_get_rtmp_address():
@@ -148,4 +184,8 @@ def get_tomorrow_point():
 
 
 if __name__ == '__main__':
-    save_to_mp4()
+    app_key = 'f0278514f31b41dab85b96a7f2510fcf'
+    app_secret = 'ff7f1cfe82b907c24a06dca343eb04ed'
+    client = EzvizClient(None)
+    client.fetch_access_token(app_key, app_secret)
+

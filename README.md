@@ -3,6 +3,9 @@
 ## Build & Test Status
 * [![Build Status](https://travis-ci.org/littlepiggroup/curing-chamber-monitor.svg?branch=integration)](https://travis-ci.org/littlepiggroup/curing-chamber-monitor)
 
+## Requirements
+* The VERSIONs of libs bimsheng are using! Please give me your requirements.
+
 ## 项目结构
 * curing chamber monitor目录是Django的project, ccm/ccmapp是Django的app. 一个project可以包含多个app.
 * http://www.django-rest-framework.org/tutorial/quickstart/ it explains why place db folder under pocket-monitor.

@@ -95,11 +95,33 @@ class Sample(models.Model):
     class Meta:
         ordering = ('id',)
 
+    def isAlert(self):
+        # TODO
+        mark_as_alert = False
+        is_biao_zhun_yanghu = (self.hnt_yhtj == u'标准养护')
+        if is_biao_zhun_yanghu:
+            pass
+        elif int(self.exam_result.replace('%', '')) > 100:
+            mark_as_alert = True
+        else:
+            # It is a good sample
+            pass
+        return mark_as_alert
+
 
 class SampleAlert(models.Model):
+    CREATED = 'CREATED'
+    FIXING = 'FIXING'
+    CLOSED = 'CLOSED'
+    STATUS_CHOICES = (
+        (CREATED, 'created'),
+        (FIXING, 'fixing'),
+        (CLOSED, 'closed'),
+    )
+
     sample = models.ForeignKey(Sample)
     # Created, fixing, closed.
-    status = models.CharField(max_length=10)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=CREATED)
     create_time = models.DateTimeField()
     created_by = models.CharField(max_length=10)
     update_time = models.DateTimeField()
@@ -114,6 +136,8 @@ class EzvizAccount(models.Model):
     user_name = models.CharField(max_length=50)
     app_key = models.CharField(max_length=200)
     secret = models.CharField(max_length=200)
+    access_token = models.CharField(max_length=200, null=True)
+    access_token_expire_time = models.IntegerField(null=True)
 
     class Meta:
         ordering = ('id',)

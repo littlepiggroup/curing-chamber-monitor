@@ -30,6 +30,7 @@ class Sync(object):
         logger.info("Sync %Ld started." % start_time)
         self._building_company_users_sync()
         building_companies = models.BuildingCompany.objects.filter(disabled=False)
+        logger.info("Got %s building companies." % len(building_companies))
         for building_company in building_companies:
             self._do_sync(building_company)
         logger.info("Sync %Ld ended, cost %Ld\n\n" % (start_time, time.time() - start_time))
@@ -41,6 +42,8 @@ class Sync(object):
         """
         logger.info("Sync for building company users")
         building_company_users = models.BuildingCompanyUser.objects.filter(disabled=False)
+        if len(building_company_users) == 0:
+            logger.info("Not find build company user!")
         for building_company_user in building_company_users:
             try:
                 updated_building_company_user = False
@@ -58,9 +61,11 @@ class Sync(object):
                         for project_item in raw_data:
                             contract_raw_data = self._get_raw_data(self.contract_retriever
                                                                    .retrieve(project_id=project_item["_Id"]))
+                            logger.debug("Got contract data: %s" % contract_raw_data)
                             if contract_raw_data:
                                 for contract_item in contract_raw_data:
                                     building_company_name = contract_item["_BuildUnitName"]
+                                    logger.info("Got building company name: %s" % building_company_name)
                                     building_company = models.BuildingCompany.objects.get(name=building_company_name)
                                     if building_company:
                                         building_company.name = building_company_name
@@ -84,13 +89,17 @@ class Sync(object):
         :param building_company:
         :return:
         """
-        logger.info("Sync for building company %d" % building_company.id)
+        logger.info("Sync for building company id: %s, name: %s" % (building_company.id, building_company.name))
         building_company_users = models.BuildingCompanyUser.objects.filter(building_company_id=building_company.id,
                                                                            disabled=False)
         for building_company_user in building_company_users:
             try:
                 if building_company.instance_id and building_company_user.instance_id:
                     self._projects_sync(building_company, building_company_user)
+                else:
+                    logger.warn("One of them is None."
+                                "building_company.instance_id: %s,building_company_user.instance_id: %s" %
+                                (building_company.instance_id, building_company_user.instance_id))
             except Exception as e:
                 exstr = traceback.format_exc()
                 logger.error('Sync error: %s %s' % (type(e), exstr))
@@ -130,6 +139,7 @@ class Sync(object):
 
     def _do_projects_sync(self, raw_data, building_company):
         registered_projects = models.Project.objects.filter(building_company_id=building_company.id)
+        logger.info("registered projects: %s" % registered_projects)
         registered_projects_by_instance_id = dict([(item.instance_id, item) for item in registered_projects
                                                    if item.instance_id])
         registered_project_by_name = {}
