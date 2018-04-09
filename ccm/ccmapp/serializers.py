@@ -86,9 +86,9 @@ class CameraSerializer(serializers.ModelSerializer):
         pass
         ezviz_account = validated_data['ezviz_account']
         from ccm.ccmapp.videomgr.videomgr import EzvizClient
-        ezviz_client = EzvizClient(ezviz_account)
-        rtmp_address = ezviz_client.get_rtmp_adr_smooth(validated_data['device_serial_number'])
-        validated_data['rtmp_address'] = rtmp_address
+        # ezviz_client = EzvizClient(ezviz_account)
+        # rtmp_address = ezviz_client.get_rtmp_adr_smooth(validated_data['device_serial_number'])
+        # validated_data['rtmp_address'] = rtmp_address
         temp = models.Camera.objects.create(**validated_data)
         return temp
 
