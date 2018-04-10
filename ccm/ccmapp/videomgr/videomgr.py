@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-import datetime
+from datetime import datetime, timedelta
 import random
 import sched
 import threading
@@ -74,13 +74,15 @@ class EzvizClient(object):
         self.ezviz_url = "https://open.ys7.com"
         # https://open.ys7.com/doc/zh/book/index/user.html
         # 获取到的accessToken有效期是7天
-        # if ezviz_account_model.access_token is None:
-        #     pass
-        access_token_and_expire_time = self.fetch_access_token(ezviz_account_model.app_key,
-                                                               ezviz_account_model.secret)
-        ezviz_account_model.access_token = access_token_and_expire_time[0]
-        ezviz_account_model.access_token_expire_time = access_token_and_expire_time[1]
-        ezviz_account_model.save()
+
+        current_time = (datetime.now() - datetime.utcfromtimestamp(0)).total_seconds()*1000
+        if ezviz_account_model.access_token is None or current_time > ezviz_account_model.access_token_expire_time:
+            # Update access token
+            access_token_and_expire_time = self.fetch_access_token(ezviz_account_model.app_key,
+                                                                   ezviz_account_model.secret)
+            ezviz_account_model.access_token = access_token_and_expire_time[0]
+            ezviz_account_model.access_token_expire_time = long(access_token_and_expire_time[1])
+            ezviz_account_model.save()
         self.access_token = ezviz_account_model.access_token
 
     def fetch_access_token(self, app_key, secret):
@@ -173,11 +175,11 @@ def start_scheduler():
 
 
 def get_tomorrow_point():
-    tomorrow_day = datetime.date.today() + datetime.timedelta(days=1)
+    tomorrow_day = datetime.today() + timedelta(days=1)
     candidates = [7, 8, 9]
     point_idx = random.randrange(0, len(candidates))
     point = candidates[point_idx]
-    point_time = datetime.datetime.fromordinal(tomorrow_day.toordinal()) + datetime.timedelta(hours=point)
+    point_time = datetime.fromordinal(tomorrow_day.toordinal()) + datetime.timedelta(hours=point)
     return time.mktime(point_time.timetuple()) + point_time.microsecond / 1E6
 
 # ----------- End: Scheduler related codee-----------

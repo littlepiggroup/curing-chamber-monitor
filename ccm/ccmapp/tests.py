@@ -53,8 +53,7 @@ class ProjectApiTests(APITestCase):
         # TODO: for now, rtmp_address is mandatory. In future, it should be fetched automatically.
         # TODO: The rtmp address is also got from ezviz website (after login and bind the camera).
         req_body = {'ezviz_account':1, 'project': 1,
-                    'device_serial_number': "762881292",
-                    'rtmp_address': 'rtmp://rtmp.open.ys7.com/openlive/bfed2855f58d4dd6891e670060540a7a'
+                    'device_serial_number': "762881292"
         }
         url = reverse('camera-list')
         resp = self.client.post(url, req_body, format='json')
