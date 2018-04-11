@@ -124,6 +124,8 @@ class SampleAlert(models.Model):
     )
 
     sample = models.ForeignKey(Sample)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
     # Created, fixing, closed.
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=CREATED)
     create_time = models.DateTimeField()
@@ -172,6 +174,8 @@ class Video(models.Model):
 # video alert may be created by user.
 class VideoAlert(models.Model):
     video = models.ForeignKey(Video, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
     # auto, manual
     alert_type = models.CharField(max_length=10)
     status = models.CharField(max_length=10)
@@ -201,6 +205,9 @@ class TempHumdtyData(models.Model):
 
 
 class TempHumdtyAlert(models.Model):
+    sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
     status = models.CharField(max_length=10)
     create_time = models.DateTimeField()
     created_by = models.CharField(max_length=10)
@@ -269,7 +276,16 @@ class ProjectPhaseView:
 class BuildingCompanyReport(models.Model):
     score = models.IntegerField()
 
+class Alert(models.Model):
+    company = models.ForeignKey(BuildingCompany, on_delete=models.DO_NOTHING)
+    project = models.ForeignKey(Project, on_delete=models.DO_NOTHING)
+    status = models.CharField(max_length=10)
+    create_time = models.DateTimeField()
+    update_time = models.DateTimeField()
 
+    class Meta:
+        managed = False
+        db_table = 'ccmapp_alert'
 
 
 # ----------------------------- End: Report related model -----------------------------
