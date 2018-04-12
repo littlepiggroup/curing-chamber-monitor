@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import datetime as DT
+
 import django_filters.rest_framework
-from rest_framework import viewsets,filters
+from django.db.models import Count
+from rest_framework import viewsets, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -24,14 +27,14 @@ class BuildingCompanyViewSet(viewsets.ModelViewSet):
 class BuildingCompanyUserViewSet(viewsets.ModelViewSet):
     queryset = models.BuildingCompanyUser.objects.all()
     serializer_class = serializers.BuildingCompanyUserSerializer
-    filter_fields = ('login_name', 'instance_id', 'disabled', 'building_company',  'added_time')
-    ordering_fields = ('login_name', 'disabled', 'building_company',  'added_time')
+    filter_fields = ('login_name', 'instance_id', 'disabled', 'building_company', 'added_time')
+    ordering_fields = ('login_name', 'disabled', 'building_company', 'added_time')
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
-    filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter,filters.OrderingFilter,)
+    filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
     filter_fields = ('status', 'nature', 'create_time', 'region', 'address',
                      'last_edit_time', 'building_company', 'instance_id', 'added_time')
     search_fields = ('nature', 'region', 'address')
@@ -56,6 +59,7 @@ class SampleViewSet(viewsets.ModelViewSet):
     ordering_fields = ('name', 'project', 'item_name', 'kind_name',
                        'core_code_id', 'core_code_id_end', 'status')
 
+
 # -------------------- Start: video related views --------------------
 
 
@@ -75,18 +79,31 @@ class VideoViewSet(viewsets.ModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
-    filter_fields = ('camera', )
-
+    filter_fields = ('camera',)
 
 
 class GlobalReportView(APIView):
     """
     List all snippets, or create a new snippet.
     """
-    #http://www.django-rest-framework.org/tutorial/3-class-based-views/
+
+    # http://www.django-rest-framework.org/tutorial/3-class-based-views/
     def get(self, request, format=None):
         project_count = Project.objects.all().count()
         total_open_alerts = Alert.objects.exclude(status=SampleAlert.CLOSED).count()
         global_report = GlobalReport(project_count, total_open_alerts)
         serializer = GlobalReportSerializer(global_report)
         return Response(serializer.data)
+
+
+class ProjectPhaseReportView(APIView):
+    def get(self, request, format=None):
+        time_range = request.GET.get('time_range', 'last_week')
+        end_time = DT.datetime.now()
+        start_time = end_time - DT.timedelta(days=7)
+        if time_range == 'last_month':
+            start_time = end_time - DT.timedelta(days=30)
+
+        groupby_project = Alert.objects.filter(create_time__lt=end_time, create_time__gt=start_time).values(
+            'project_id').annotate(alert_count=Count('id'))
+        return Response(groupby_project)
