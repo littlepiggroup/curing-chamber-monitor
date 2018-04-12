@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.conf.urls import url
 from rest_framework import routers
 from ccm.ccmapp import views
 
@@ -16,3 +17,6 @@ router.register(r'api/ezviz_accounts', views.EzvizAccountViewSet, base_name='ezv
 router.register(r'api/videos', views.VideoViewSet, base_name='video')
 
 urlpatterns = router.urls
+urlpatterns += [
+    url(r'api/global_report', views.GlobalReportView.as_view())
+]

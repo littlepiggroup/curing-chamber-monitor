@@ -3,11 +3,14 @@ from __future__ import unicode_literals
 
 import django_filters.rest_framework
 from rest_framework import viewsets,filters
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from ccm.ccmapp import models, serializers
 
 # Create your views here.
-from ccm.ccmapp.models import EzvizAccount, Camera, Video
-from ccm.ccmapp.serializers import EzvizAccountSerializer, CameraSerializer, VideoSerializer
+from ccm.ccmapp.models import EzvizAccount, Camera, Video, Project, Alert, SampleAlert, GlobalReport
+from ccm.ccmapp.serializers import EzvizAccountSerializer, CameraSerializer, VideoSerializer, GlobalReportSerializer
 
 
 class BuildingCompanyViewSet(viewsets.ModelViewSet):
@@ -74,3 +77,16 @@ class VideoViewSet(viewsets.ModelViewSet):
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
     filter_fields = ('camera', )
 
+
+
+class GlobalReportView(APIView):
+    """
+    List all snippets, or create a new snippet.
+    """
+    #http://www.django-rest-framework.org/tutorial/3-class-based-views/
+    def get(self, request, format=None):
+        project_count = Project.objects.all().count()
+        total_open_alerts = Alert.objects.exclude(status=SampleAlert.CLOSED).count()
+        global_report = GlobalReport(project_count, total_open_alerts)
+        serializer = GlobalReportSerializer(global_report)
+        return Response(serializer.data)

@@ -101,3 +101,7 @@ class VideoSerializer(serializers.ModelSerializer):
         fields = '__all__'
         depth = 1
 # ----------------------------- End: video related code -----------------------------
+
+class GlobalReportSerializer(serializers.Serializer):
+    project_count = serializers.IntegerField()
+    open_alert_count = serializers.IntegerField()

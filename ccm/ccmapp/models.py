@@ -289,3 +289,8 @@ class Alert(models.Model):
 
 
 # ----------------------------- End: Report related model -----------------------------
+
+class GlobalReport(object):
+    def __init__(self, project_count, open_alert_count):
+        self.project_count = project_count
+        self.open_alert_count = open_alert_count
