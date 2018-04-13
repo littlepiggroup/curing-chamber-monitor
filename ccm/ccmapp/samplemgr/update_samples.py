@@ -239,7 +239,7 @@ class Sync(object):
                 sample = models.Sample.objects.get(instance_id=sample_item["_Id"])
                 if sample.exam_result != sample_item["_Exam_Result"] \
                         or sample.status != int(sample_item["_Sample_Status"]):
-                    sample.exam_result = sample_item["_Exam_Result"]
+                    sample.exam_result = int(sample_item["_Exam_Result"].replace('%', ''))
                     sample.status = int(sample_item["_Sample_Status"])
                     sample.status_str = sample_item["_SampleStatusStr"]
                     sample.save()

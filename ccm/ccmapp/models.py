@@ -66,12 +66,13 @@ class Contract(models.Model):
 
 
 class Sample(models.Model):
+    project = models.ForeignKey(Project, related_name='+')
+    contract = models.ForeignKey(Contract, related_name='+')
+    company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
     instance_id = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=100)
     num = models.CharField(max_length=100, null=True)
     item_name = models.CharField(max_length=100)
-    project = models.ForeignKey(Project, related_name='+')
-    contract = models.ForeignKey(Contract, related_name='+')
     count = models.IntegerField(null=True)
     status = models.IntegerField(null=True)
     status_str = models.CharField(max_length=20,null=True)
@@ -84,7 +85,7 @@ class Sample(models.Model):
     project_part = models.CharField(max_length=100, null=True)
     spec = models.CharField(max_length=100, null=True)
     grade = models.CharField(max_length=20, null=True)
-    exam_result = models.CharField(max_length=100, null=True)
+    exam_result = models.IntegerField()
     hnt_yhtj = models.CharField(max_length=100,null=True)
     age_time_str = models.CharField(max_length=20,null=True)
     # report_date = models.DateTimeField(blank=True)
