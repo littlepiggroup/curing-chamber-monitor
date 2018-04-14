@@ -125,6 +125,7 @@ class SampleAlert(models.Model):
     )
 
     sample = models.ForeignKey(Sample)
+    sample_name = models.CharField(max_length=50)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
     # Created, fixing, closed.

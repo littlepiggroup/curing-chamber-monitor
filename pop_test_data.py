@@ -42,12 +42,14 @@ def populate():
     sample2.save()
 
     sample_alert_1 = SampleAlert(company=building_company_1, project=project1,
-                                 sample=sample1, create_time=DT.datetime.now(), update_time=DT.datetime.now(),
+                                 sample=sample1, sample_name='混凝土试件', create_time=DT.datetime.now(),
+                                 update_time=DT.datetime.now(),
                                  status=SampleAlert.CREATED
                                  )
     sample_alert_1.save()
     sample_alert_2 = SampleAlert(company=building_company_1, project=project1,
-                                 sample=sample2, create_time=DT.datetime.now(), update_time=DT.datetime.now(),
+                                 sample=sample2, sample_name='钢筋',
+                                 create_time=DT.datetime.now(), update_time=DT.datetime.now(),
                                  status=SampleAlert.CREATED
                                  )
     print DT.datetime.now()
@@ -69,7 +71,8 @@ def populate():
     sample3.save()
 
     sample_alert_1 = SampleAlert(company=building_company_2, project=project2,
-                                 sample=sample1, create_time=DT.datetime.now(), update_time=DT.datetime.now(),
+                                 sample=sample1, sample_name='混凝土试件',
+                                 create_time=DT.datetime.now(), update_time=DT.datetime.now(),
                                  status=SampleAlert.CREATED
                                  )
     sample_alert_1.save()

@@ -12,8 +12,8 @@ router.register(r'api/projects', views.ProjectViewSet, base_name='project')
 router.register(r'api/project_names', views.ProjectNameViewSet, base_name='project_name')
 router.register(r'api/samples', views.SampleViewSet, base_name='sample')
 
-router.register(r'api/cameras', views.CameraViewSet, base_name='camera')
 router.register(r'api/ezviz_accounts', views.EzvizAccountViewSet, base_name='ezviz_account')
+router.register(r'api/cameras', views.CameraViewSet, base_name='camera')
 router.register(r'api/videos', views.VideoViewSet, base_name='video')
 
 urlpatterns = router.urls
