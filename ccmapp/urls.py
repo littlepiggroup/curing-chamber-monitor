@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.conf.urls import url
 from rest_framework import routers
-from ccm.ccmapp import views
+from ccmapp import views
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'api/building_companies', views.BuildingCompanyViewSet, base_name='building_company')

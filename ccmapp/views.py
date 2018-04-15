@@ -10,14 +10,14 @@ from rest_framework import viewsets, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ccm.ccmapp import models, serializers
+from ccmapp import models, serializers
 
 # Create your views here.
-from ccm.ccmapp.models import EzvizAccount, Camera, Video, Project, Alert, SampleAlert, GlobalReport, VideoAlert, \
+from ccmapp.models import EzvizAccount, Camera, Video, Project, Alert, SampleAlert, GlobalReport, VideoAlert, \
     TempHumdtyAlert
-from ccm.ccmapp.serializers import EzvizAccountSerializer, CameraSerializer, VideoSerializer, GlobalReportSerializer, \
+from ccmapp.serializers import EzvizAccountSerializer, CameraSerializer, VideoSerializer, GlobalReportSerializer, \
     SampleAlertSerializer, VideoAlertSerializer, TempHumdtyAlertSerializer
-from ccm.ccmapp.report import phase_report
+from ccmapp.report import phase_report
 
 def normalize_resp(data_list):
     resp_json = [

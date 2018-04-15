@@ -2,8 +2,8 @@
 from __future__ import unicode_literals
 
 from rest_framework import serializers
-from ccm.ccmapp import models
-from ccm.ccmapp.models import EzvizAccount, Project, Video, Camera
+from ccmapp import models
+from ccmapp.models import EzvizAccount, Project, Video, Camera
 
 
 class BuildingCompanySerializer(serializers.ModelSerializer):
@@ -88,7 +88,7 @@ class CameraSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         pass
         ezviz_account = validated_data['ezviz_account']
-        from ccm.ccmapp.videomgr.videomgr import EzvizClient
+        from ccmapp.videomgr.videomgr import EzvizClient
         # ezviz_client = EzvizClient(ezviz_account)
         # rtmp_address = ezviz_client.get_rtmp_adr_smooth(validated_data['device_serial_number'])
         # validated_data['rtmp_address'] = rtmp_address

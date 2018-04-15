@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import logging
 
 from django.core.management.base import BaseCommand
-from ccm.ccmapp.videomgr.videomgr import collect
+from ccmapp.videomgr.videomgr import collect
 
 
 logger = logging.getLogger("samples.sync")

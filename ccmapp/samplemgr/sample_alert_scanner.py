@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from ccm.ccmapp.models import Project, Sample, SampleAlert
+from ccmapp.models import Project, Sample, SampleAlert
 from django.db.models import Q
 from datetime import datetime
 

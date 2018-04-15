@@ -11,7 +11,7 @@ from _elementtree import ParseError
 from _socket import timeout
 from httplib import HTTPException
 import logging
-from ccm.ccmapp.samplemgr import utils, http
+from ccmapp.samplemgr import utils, http
 
 logger = logging.getLogger("samples.retriever")
 

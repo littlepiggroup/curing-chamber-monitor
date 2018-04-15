@@ -1,7 +1,7 @@
 import datetime
 
-from ccm.ccmapp.samplemgr.update_samples import Sync
-from ccm.ccmapp.videomgr import videomgr
+from ccmapp.samplemgr.update_samples import Sync
+from ccmapp.videomgr import videomgr
 import logging
 
 

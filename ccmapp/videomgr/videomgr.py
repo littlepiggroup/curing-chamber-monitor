@@ -33,13 +33,13 @@ def save_to_mp4(rtmp_address, save_path):
 
 
 def add_video_object(camera, save_path, url_path):
-    from ccm.ccmapp.models import Video
+    from ccmapp.models import Video
     video = Video(camera=camera, save_abs_path=save_path, url_path=url_path)
     video.save()
 
 
 def collect():
-    from ccm.ccmapp.models import Camera
+    from ccmapp.models import Camera
     cameras = Camera.objects.all()
     cameras_amount = len(cameras)
     if cameras_amount > 0:

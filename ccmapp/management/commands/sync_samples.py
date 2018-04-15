@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import logging
 
 from django.core.management.base import BaseCommand
-from ccm.ccmapp.samplemgr.update_samples import Sync
+from ccmapp.samplemgr.update_samples import Sync
 
 
 logger = logging.getLogger("samples.sync")

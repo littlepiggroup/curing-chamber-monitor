@@ -86,7 +86,7 @@ class ProjectApiTests(APITestCase):
                          new_cameras[0].rtmp_address)
         self.assertEqual(1, new_cameras[0].project.id)
 
-        from ccm.ccmapp.videomgr import videomgr
+        from ccmapp.videomgr import videomgr
         videomgr.collect()
         videos = Video.objects.all()
         self.assertEqual(1, len(videos))

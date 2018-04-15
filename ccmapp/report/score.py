@@ -6,7 +6,7 @@ from collections import namedtuple
 from django.db import connection
 
 # Two dimensions: 1. global group/sub-company/project; 2. Current/LastDay/LastWeek/LastMonth
-from ccm.ccmapp.models import BuildingCompany
+from ccmapp.models import BuildingCompany
 
 
 def namedtuplefetchall(cursor):

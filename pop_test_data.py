@@ -2,7 +2,7 @@
 
 from django.db.models import Count
 
-from ccm.ccmapp.models import *
+from ccmapp.models import *
 import datetime as DT
 
 

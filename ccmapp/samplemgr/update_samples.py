@@ -5,8 +5,8 @@ import time
 import logging
 import traceback
 
-from ccm.ccmapp import models
-from ccm.ccmapp.samplemgr.retriever import ProjectRetriever, ContractRetriever, SampleRetriever, UserInfoRetriever
+from ccmapp import models
+from ccmapp.samplemgr.retriever import ProjectRetriever, ContractRetriever, SampleRetriever, UserInfoRetriever
 
 logger = logging.getLogger("samples.sync")
 

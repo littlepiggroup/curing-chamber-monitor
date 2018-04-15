@@ -133,13 +133,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'django_crontab',
-    'ccm.ccmapp'
+    'ccmapp'
 ]
 
 # Before python manage.py, you may have to run python manage.py crontab add
 CRONJOBS = [
-    ('0 8 * * *', 'ccm.ccmapp.cron.update_samples_task'),
-    ('0 9 * * *', 'ccm.ccmapp.cron.fetch_video_task')
+    ('0 8 * * *', 'ccmapp.cron.update_samples_task'),
+    ('0 9 * * *', 'ccmapp.cron.fetch_video_task')
 ]
 
 MIDDLEWARE = [
@@ -259,7 +259,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend', 'rest_framework.filters.OrderingFilter'
     ),
-    'DEFAULT_PAGINATION_CLASS': 'ccm.ccmapp.pagination.CustomizedPageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'ccmapp.pagination.CustomizedPageNumberPagination',
     'PAGE_SIZE': 500
 }
 

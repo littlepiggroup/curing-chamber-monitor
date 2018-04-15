@@ -5,7 +5,7 @@ from collections import namedtuple
 
 from django.db import connection
 
-from ccm.ccmapp.models import Project
+from ccmapp.models import Project
 
 
 def time_para_to_days(time_range):
