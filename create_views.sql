@@ -5,6 +5,7 @@ SELECT
 company_id AS company_id,
 project_id AS project_id,
 status AS status,
+alert_type AS alert_type,
 create_time AS create_time,
 update_time AS update_time
 FROM ccmapp_samplealert
@@ -16,6 +17,7 @@ SELECT
 company_id AS company_id,
 project_id AS project_id,
 status AS status,
+alert_type AS alert_type,
 create_time AS create_time,
 update_time AS update_time
 FROM ccmapp_videoalert
@@ -27,6 +29,7 @@ SELECT
 company_id AS company_id,
 project_id AS project_id,
 status AS status,
+alert_type AS alert_type,
 create_time AS create_time,
 update_time AS update_time
 FROM ccmapp_temphumdtyalert;
@@ -75,6 +78,46 @@ GROUP BY company_id;
 SELECT company_id, count(id) as temperature_humidity_total, count(id)*2 as temperature_humidity_alert_deduction FROM ccmapp_temphumdtyalert
 WHERE TIMESTAMPDIFF(DAY, create_time, NOW()) <= 30
 GROUP BY company_id;
+
+-- company phase report
+
+SELECT
+    ccmapp_project.building_company_id AS building_company_id,
+    ccmapp_project.id AS project_id,
+    count(ccmapp_alert.id) AS alert_count,
+    count(ccmapp_alert.id) > 0 AS has_alert
+FROM ccmapp_project LEFT OUTER JOIN ccmapp_alert ON ccmapp_project.id = ccmapp_alert.project_id
+WHERE ccmapp_project.building_company_id = 8
+    AND (ccmapp_alert.create_time IS NULL OR TIMESTAMPDIFF(DAY, ccmapp_alert.create_time, NOW()) <= 30)
+GROUP BY ccmapp_project.id
+;
+
+-- project phase report
+
+SELECT
+    ccmapp_project.building_company_id AS building_company_id,
+    ccmapp_project.id AS project_id,
+    SUM(IF(ccmapp_alert.alert_type = 0, 1, 0)) AS sample_alert_count,
+    SUM(IF(ccmapp_alert.alert_type = 1, 1, 0)) AS video_alert_count,
+    100 - SUM(IF(ccmapp_alert.alert_type = 0, 1, 0)) * 0.5
+        - SUM(IF(ccmapp_alert.alert_type = 1, 1, 0)) * 2.0
+        - SUM(IF(ccmapp_alert.alert_type = 3 OR ccmapp_alert.alert_type = 4, 1, 0))*1.0
+        AS score
+FROM ccmapp_project LEFT OUTER JOIN ccmapp_alert ON ccmapp_project.id = ccmapp_alert.project_id
+WHERE ccmapp_project.building_company_id = 4
+    AND (ccmapp_alert.create_time IS NULL OR TIMESTAMPDIFF(DAY, ccmapp_alert.create_time, NOW()) <= 30)
+GROUP BY ccmapp_project.id
+;
+
+SELECT
+    ccmapp_project.building_company_id AS building_company_id,
+    ccmapp_project.id AS project_id,
+    count(ccmapp_samplealert.id) AS alert_count
+FROM ccmapp_project LEFT OUTER JOIN ccmapp_samplealert ON ccmapp_project.id = ccmapp_samplealert.project_id
+WHERE ccmapp_project.building_company_id = 4
+    AND (ccmapp_samplealert.create_time IS NULL OR TIMESTAMPDIFF(DAY, ccmapp_samplealert.create_time, NOW()) <= 30)
+GROUP BY ccmapp_project.id
+;
 
 
 

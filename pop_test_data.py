@@ -25,6 +25,15 @@ def populate():
     project2.save()
     project_2_name_1 = ProjectName(project=project2, name="Project_2_Name_1")
     project_2_name_1.save()
+    project3 = Project(building_company=building_company_2, instance_id='proj_3')
+    project3.save()
+    project_3_name_1 = ProjectName(project=project3, name="Project_3_Name_1")
+    project_3_name_1.save()
+    project4 = Project(building_company=building_company_2, instance_id='proj_4')
+    project4.save()
+    project_4_name_1 = ProjectName(project=project4, name="Project_4_Name_1")
+    project_4_name_1.save()
+
 
     contract = Contract(project=project1, sign_number='sign_1', checked_date_time=DT.datetime.now(), checked=True)
     contract.save()
@@ -41,13 +50,15 @@ def populate():
                      )
     sample2.save()
 
-    sample_alert_1 = SampleAlert(company=building_company_1, project=project1,
+
+
+    sample_alert_1 = SampleAlert(company=building_company_1, project=project1, alert_type = AlertType.SAMPLE,
                                  sample=sample1, sample_name='混凝土试件', create_time=DT.datetime.now(),
                                  update_time=DT.datetime.now(),
                                  status=SampleAlert.CREATED
                                  )
     sample_alert_1.save()
-    sample_alert_2 = SampleAlert(company=building_company_1, project=project1,
+    sample_alert_2 = SampleAlert(company=building_company_1, project=project1, alert_type = AlertType.SAMPLE,
                                  sample=sample2, sample_name='钢筋',
                                  create_time=DT.datetime.now(), update_time=DT.datetime.now(),
                                  status=SampleAlert.CREATED
@@ -70,13 +81,25 @@ def populate():
                      )
     sample3.save()
 
-    sample_alert_1 = SampleAlert(company=building_company_2, project=project2,
+    sample4 = Sample(project=project3, company=building_company_2, instance_id='6', contract=contract,
+                     name="钢筋", regular=False, num='11',
+                     hnt_yhtj='标准养护', exam_result=130
+                     )
+    sample4.save()
+
+    sample_alert_1 = SampleAlert(company=building_company_2, project=project2, alert_type = AlertType.SAMPLE,
                                  sample=sample1, sample_name='混凝土试件',
                                  create_time=DT.datetime.now(), update_time=DT.datetime.now(),
                                  status=SampleAlert.CREATED
                                  )
     sample_alert_1.save()
 
+    sample_alert_4 = SampleAlert(company=building_company_2, project=project3, alert_type = AlertType.SAMPLE,
+                                 sample=sample4, sample_name='混凝土试件',
+                                 create_time=DT.datetime.now(), update_time=DT.datetime.now(),
+                                 status=SampleAlert.CREATED
+                                 )
+    sample_alert_4.save()
 
     alerts = Alert.objects.all()
     # for a in alerts:

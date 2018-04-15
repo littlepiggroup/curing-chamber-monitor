@@ -19,6 +19,6 @@ router.register(r'api/videos', views.VideoViewSet, base_name='video')
 urlpatterns = router.urls
 urlpatterns += [
     url(r'api/global_report', views.GlobalReportView.as_view()),
-    url(r'api/project_phase_report', views.ProjectPhaseReportView.as_view())
-
+    url(r'api/project_phase_report', views.ProjectPhaseReportView.as_view()),
+    url(r'api/company_phase_report', views.CompanyPhaseReportView.as_view()),
 ]

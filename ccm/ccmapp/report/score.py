@@ -15,6 +15,7 @@ def namedtuplefetchall(cursor):
     nt_result = namedtuple('Result', [col[0] for col in desc])
     return [nt_result(*row) for row in cursor.fetchall()]
 
+
 def my_custom_sql():
     with connection.cursor() as cursor:
         cursor.execute("SELECT * FROM ccmapp_alert")

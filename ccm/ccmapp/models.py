@@ -114,6 +114,13 @@ class Sample(models.Model):
         return mark_as_alert
 
 
+class AlertType:
+    SAMPLE = 0
+    VIDEO = 1
+    TEMPERATURE = 2
+    HUMIDITY = 3
+
+
 class SampleAlert(models.Model):
     CREATED = 'CREATED'
     FIXING = 'FIXING'
@@ -126,6 +133,7 @@ class SampleAlert(models.Model):
 
     sample = models.ForeignKey(Sample)
     sample_name = models.CharField(max_length=50)
+    alert_type = models.IntegerField()
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
     # Created, fixing, closed.
@@ -179,7 +187,7 @@ class VideoAlert(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
     # auto, manual
-    alert_type = models.CharField(max_length=10)
+    alert_type = models.IntegerField()
     status = models.CharField(max_length=10)
     create_time = models.DateTimeField()
     created_by = models.CharField(max_length=10)
@@ -207,6 +215,7 @@ class TempHumdtyData(models.Model):
 
 
 class TempHumdtyAlert(models.Model):
+    alert_type = models.IntegerField()
     sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
