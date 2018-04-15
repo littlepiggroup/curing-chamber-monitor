@@ -6,6 +6,24 @@
 ## Requirements
 * The VERSIONs of libs bimsheng are using! Please give me your requirements.
 
+## URLs
+```
+http://127.0.0.1:8000/api/company_phase_report?time_range=last_day
+http://127.0.0.1:8000/api/company_phase_report?time_range=last_week
+http://127.0.0.1:8000/api/company_phase_report?time_range=last_month
+http://127.0.0.1:8000/api/company_phase_report?company_id=8&time_range=last_day
+http://127.0.0.1:8000/api/company_phase_report?company_id=8&time_range=last_week
+http://127.0.0.1:8000/api/company_phase_report?company_id=8&time_range=last_month
+http://127.0.0.1:8000/api/project_phase_report?time_range=last_day
+http://127.0.0.1:8000/api/project_phase_report?time_range=last_week
+http://127.0.0.1:8000/api/project_phase_report?time_range=last_month
+http://127.0.0.1:8000/api/project_phase_report?company_id=4&time_range=last_day
+http://127.0.0.1:8000/api/project_phase_report?company_id=4&time_range=last_week
+http://127.0.0.1:8000/api/project_phase_report?company_id=4&time_range=last_month
+http://127.0.0.1:8000/api/project_phase_report?time_range=last_day&project_id=8
+http://127.0.0.1:8000/api/alerts?is_open=true&project__id=7
+```
+
 ## 项目结构
 * curing chamber monitor目录是Django的project, ccm/ccmapp是Django的app. 一个project可以包含多个app.
 * http://www.django-rest-framework.org/tutorial/quickstart/ it explains why place db folder under pocket-monitor.

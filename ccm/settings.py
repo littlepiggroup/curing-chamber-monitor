@@ -154,21 +154,22 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'ccm.urls'
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
+# TEMPLATES = [
+#     {
+#         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+#         'TEMPLATE_DIRS': [os.path.join( os.path.split( os.path.dirname(__file__))[0],'templates').replace('\\','/'),],
+#         'APP_DIRS': True,
+#         'OPTIONS': {
+#             'context_processors': [
+#                 'django.template.context_processors.debug',
+#                 'django.template.context_processors.request',
+#                 'django.contrib.auth.context_processors.auth',
+#                 'django.contrib.messages.context_processors.messages',
+#             ],
+#         },
+#     },
+# ]
+
 
 WSGI_APPLICATION = 'ccm.wsgi.application'
 
@@ -177,10 +178,6 @@ WSGI_APPLICATION = 'ccm.wsgi.application'
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    # }
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'mydb',
@@ -211,31 +208,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/1.11/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
-LANGUAGE_CODE='zh-Hans'
-
-TIME_ZONE = 'UTC'
-TIME_ZONE = 'Asia/Shanghai'
-
-USE_I18N = True
-
-USE_L10N = True
-
-USE_TZ = True
-
-# To avoid RuntimeWarning: DateTimeField xxx received a naive datetime (2014-01-06 10:15:40.740000) while time zone support is active
-USE_TZ = False
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.11/howto/static-files/
-
-STATIC_URL = '/static/'
-# STATIC_ROOT = os.path.join(BASE_DIR, "static")
-
-
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
@@ -263,23 +235,54 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 500
 }
 
-# admin email settings
-# EMAIL_HOST = 'smtp.sina.com.cn'
-# EMAIL_PORT = 25
-# EMAIL_HOST_USER = 'sender@example.com'
-# EMAIL_HOST_PASSWORD = 'xxxxx'
-# EMAIL_SUBJECT_PREFIX = ''
-# EMAIL_USE_TLS = False
-# EMAIL_USE_SSL = False
-# EMAIL_TIMEOUT = 60
-# EMAIL_SSL_KEYFILE = None
-# EMAIL_SSL_CERTFILE = None
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# DEFAULT_CHARSET = 'UTF-8'
-# EMAIL_USE_LOCALTIME = ''
-# # display sender
-# SERVER_EMAIL = 'Server <sender@example.com>'
-# receiver
-# ADMINS = (
-#     ('Admin', 'admin@example.com'),
-# )
+
+# Internationalization
+# https://docs.djangoproject.com/en/1.11/topics/i18n/
+
+LANGUAGE_CODE = 'zh-Hans'
+
+TIME_ZONE = 'Asia/Shanghai'
+
+USE_I18N = True
+
+USE_L10N = True
+
+#USE_TZ = True
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/1.7/howto/static-files/
+# AUTH_USER_MODEL = 'ccmapp.BuildingCompanyUser'
+
+
+LOGIN_REDIRECT_URL='/index/'
+
+TEMPLATE_DIRS = (
+    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+    # Always use forward slashes, even on Windows.
+    # Don't forget to use absolute paths, not relative paths.
+    #os.path.join( os.path.dirname(__file__),'templates').replace('\\','/'),
+    os.path.join( os.path.split( os.path.dirname(__file__))[0],'templates').replace('\\','/'),
+)
+
+UPLOAD_BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_DIR=os.path.join(os.path.split(UPLOAD_BASE_DIR)[0], 'upload/' ).replace('\\','/')
+DOCTEMPLATE_DIR=os.path.join(os.path.split(UPLOAD_BASE_DIR)[0], 'doctemplate/' ).replace('\\','/')
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+STATICFILES_DIRS = (
+    ("css",os.path.join(STATIC_ROOT, 'css')),
+    ("js",os.path.join(STATIC_ROOT, 'js')),
+    ("fonts",os.path.join(STATIC_ROOT, 'fonts')),
+    ("img",os.path.join(STATIC_ROOT, 'img')),
+    ("ico",os.path.join(STATIC_ROOT, 'ico')),
+    ("textures",os.path.join(STATIC_ROOT, 'textures')),
+)
+
+STATIC_PATH = os.path.join( os.path.split( os.path.dirname(__file__))[0],'static/').replace('\\','/')
+
+IS_LOCAL_DEBUG = True
+
+X_FRAME_OPTIONS = 'ALLOWALL'
