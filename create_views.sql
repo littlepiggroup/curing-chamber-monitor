@@ -92,6 +92,15 @@ WHERE ccmapp_project.building_company_id = 8
 GROUP BY ccmapp_project.id
 ;
 
+SELECT
+    ccmapp_project.building_company_id AS building_company_id,
+    ccmapp_project.id AS project_id,
+    count(ccmapp_alert.id) AS alert_count,
+    count(ccmapp_alert.id) > 0 AS has_alert
+FROM ccmapp_project LEFT OUTER JOIN ccmapp_alert ON ccmapp_project.id = ccmapp_alert.project_id
+WHERE (ccmapp_alert.create_time IS NULL OR TIMESTAMPDIFF(DAY, ccmapp_alert.create_time, NOW()) <= 30)
+GROUP BY ccmapp_project.id
+;
 -- project phase report
 
 SELECT

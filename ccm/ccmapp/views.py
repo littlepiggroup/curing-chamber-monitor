@@ -97,26 +97,24 @@ class GlobalReportView(APIView):
         return Response(serializer.data)
 
 class CompanyPhaseReportView(APIView):
-    """
-    List all snippets, or create a new snippet.
-    """
 
     # http://www.django-rest-framework.org/tutorial/3-class-based-views/
     def get(self, request, format=None):
         company_id = request.GET.get('company_id')
         time_range = request.GET.get('time_range', 'last_week')
-        if company_id is None:
-            # All companies
-            pass
-        else:
-            # all_projects = Project.objects.filter(company__id=company_id)
-            return Response(phase_report.company_phase_report(company_id))
+        days = phase_report.time_para_to_days(time_range)
+
+        # all_projects = Project.objects.filter(company__id=company_id)
+        return Response(phase_report.company_phase_report(company_id, days))
 
 
 class ProjectPhaseReportView(APIView):
     def get(self, request, format=None):
         time_range = request.GET.get('time_range', 'last_week')
         company_id = request.GET.get('company_id')
+        project_id = request.GET.get('project_id')
+        days = phase_report.time_para_to_days(time_range)
+
         # end_time = DT.datetime.now()
         # start_time = end_time - DT.timedelta(days=7)
         # if time_range == 'last_month':
@@ -124,6 +122,5 @@ class ProjectPhaseReportView(APIView):
         #
         # groupby_project = Alert.objects.filter(create_time__lt=end_time, create_time__gt=start_time).values(
         #     'project_id').annotate(alert_count=Count('id'))
-        project_id = None
-        projects_report = phase_report.company_projects_phase_report(company_id, None)
+        projects_report = phase_report.company_projects_phase_report(company_id, project_id, days)
         return Response(projects_report)
