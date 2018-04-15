@@ -15,6 +15,12 @@ router.register(r'api/samples', views.SampleViewSet, base_name='sample')
 router.register(r'api/ezviz_accounts', views.EzvizAccountViewSet, base_name='ezviz_account')
 router.register(r'api/cameras', views.CameraViewSet, base_name='camera')
 router.register(r'api/videos', views.VideoViewSet, base_name='video')
+router.register(r'api/sample_alerts', views.SampleAlertViewSet, base_name='sample_alert')
+router.register(r'api/video_alerts', views.VideoAlertViewSet, base_name='video_alert')
+router.register(r'api/temperature_humidity_alerts', views.TempHmdtyAlertViewSet, base_name='temperature_humidity_alert')
+
+router.register(r'api/alerts', views.AlertViewSet, base_name='alert')
+
 
 urlpatterns = router.urls
 urlpatterns += [

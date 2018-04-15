@@ -5,6 +5,8 @@ from collections import namedtuple
 
 from django.db import connection
 
+from ccm.ccmapp.models import Project
+
 
 def time_para_to_days(time_range):
     if time_range == 'last_month':
@@ -70,7 +72,7 @@ def company_phase_report(company_id, days=30):
                 bad_project_counter += 1
             else:
                 good_project_counter += 1
-        return {'normal_project_count': good_project_counter, 'alert_project_count': bad_project_counter}
+        return [{'normal_project_count': good_project_counter, 'alert_project_count': bad_project_counter}]
 
 
 def get_project_filter_sql(company_id, project_id):
@@ -104,12 +106,17 @@ def company_projects_phase_report(company_id, project_id, days=30):
         score = 100.0 - (sample_alert_count * 0.5 + video_alert_count * 2.0 + temp_humidity_alert_count * 1.0)
         proj_reports.append({
             'project_id': proj_id,
+            'project_names': get_project_names(proj_id),
             'score': score,
             'sample_alert_count': sample_alert_count,
             'video_alert_count': video_alert_count,
             'temperature_humidity_alert_count': temp_humidity_alert_count
         })
     return sorted(proj_reports, key=lambda x: x['score'])
+
+
+def get_project_names(proj_id):
+    return [project_name.name for project_name in Project.objects.get(pk=proj_id).names.all()]
 
 
 def get_alert_count(project_filter_sql, days, alert_table_name):

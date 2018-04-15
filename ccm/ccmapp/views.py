@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import datetime as DT
+from collections import OrderedDict
 
 import django_filters.rest_framework
 from django.db.models import Count
@@ -12,10 +13,20 @@ from rest_framework.views import APIView
 from ccm.ccmapp import models, serializers
 
 # Create your views here.
-from ccm.ccmapp.models import EzvizAccount, Camera, Video, Project, Alert, SampleAlert, GlobalReport
-from ccm.ccmapp.serializers import EzvizAccountSerializer, CameraSerializer, VideoSerializer, GlobalReportSerializer
+from ccm.ccmapp.models import EzvizAccount, Camera, Video, Project, Alert, SampleAlert, GlobalReport, VideoAlert, \
+    TempHumdtyAlert
+from ccm.ccmapp.serializers import EzvizAccountSerializer, CameraSerializer, VideoSerializer, GlobalReportSerializer, \
+    SampleAlertSerializer, VideoAlertSerializer, TempHumdtyAlertSerializer
 from ccm.ccmapp.report import phase_report
 
+def normalize_resp(data_list):
+    resp_json = [
+        ("count", len(data_list)),
+    ("next", None),
+        ("previous", None),
+        ("results", data_list)
+    ]
+    return OrderedDict(resp_json)
 
 class BuildingCompanyViewSet(viewsets.ModelViewSet):
     queryset = models.BuildingCompany.objects.all()
@@ -59,7 +70,9 @@ class SampleViewSet(viewsets.ModelViewSet):
     search_fields = ('name',)
     ordering_fields = ('name', 'project', 'item_name', 'kind_name',
                        'core_code_id', 'core_code_id_end', 'status')
-
+class SampleAlertViewSet(viewsets.ModelViewSet):
+    queryset = SampleAlert.objects.all()
+    serializer_class = SampleAlertSerializer
 
 # -------------------- Start: video related views --------------------
 
@@ -81,6 +94,24 @@ class VideoViewSet(viewsets.ModelViewSet):
     serializer_class = VideoSerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
     filter_fields = ('camera',)
+
+class VideoAlertViewSet(viewsets.ModelViewSet):
+    queryset = VideoAlert.objects.all()
+    serializer_class = VideoAlertSerializer
+
+class TempHmdtyAlertViewSet(viewsets.ModelViewSet):
+    queryset = TempHumdtyAlert.objects.all()
+    serializer_class = TempHumdtyAlertSerializer
+
+
+
+class AlertViewSet(viewsets.ModelViewSet):
+    queryset = models.Alert.objects.all()
+    serializer_class = serializers.AlertSerializer
+    filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
+    filter_fields = ('status', 'alert_type','project__id', 'is_open')
+    search_fields = ('alert_type',)
+    ordering_fields = ('alert_type',)
 
 
 class GlobalReportView(APIView):
@@ -105,7 +136,7 @@ class CompanyPhaseReportView(APIView):
         days = phase_report.time_para_to_days(time_range)
 
         # all_projects = Project.objects.filter(company__id=company_id)
-        return Response(phase_report.company_phase_report(company_id, days))
+        return Response(normalize_resp(phase_report.company_phase_report(company_id, days)))
 
 
 class ProjectPhaseReportView(APIView):
@@ -123,4 +154,4 @@ class ProjectPhaseReportView(APIView):
         # groupby_project = Alert.objects.filter(create_time__lt=end_time, create_time__gt=start_time).values(
         #     'project_id').annotate(alert_count=Count('id'))
         projects_report = phase_report.company_projects_phase_report(company_id, project_id, days)
-        return Response(projects_report)
+        return Response(normalize_resp(projects_report))

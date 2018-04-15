@@ -260,7 +260,7 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend', 'rest_framework.filters.OrderingFilter'
     ),
     'DEFAULT_PAGINATION_CLASS': 'ccm.ccmapp.pagination.CustomizedPageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 500
 }
 
 # admin email settings

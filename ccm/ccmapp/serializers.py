@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 from ccm.ccmapp import models
-from ccm.ccmapp.models import EzvizAccount, Project, Video
+from ccm.ccmapp.models import EzvizAccount, Project, Video, Camera
 
 
 class BuildingCompanySerializer(serializers.ModelSerializer):
@@ -64,6 +64,9 @@ class SampleSerializer(serializers.ModelSerializer):
         exclude = ('instance_id', 'contract')
         depth = 1
 
+class SampleAlertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.SampleAlert
 
 # ----------------------------- Start: video related code -----------------------------
 class EzvizAccountSerializer(serializers.ModelSerializer):
@@ -94,14 +97,30 @@ class CameraSerializer(serializers.ModelSerializer):
 
 
 class VideoSerializer(serializers.ModelSerializer):
-    camera = serializers.PrimaryKeyRelatedField(queryset=Video.objects.all())
+    camera = serializers.PrimaryKeyRelatedField(queryset=Camera.objects.all())
 
     class Meta:
         model = models.Video
         fields = '__all__'
         depth = 1
+
+class VideoAlertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.VideoAlert
+
 # ----------------------------- End: video related code -----------------------------
+
+
+class TempHumdtyAlertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.TempHumdtyAlert
 
 class GlobalReportSerializer(serializers.Serializer):
     project_count = serializers.IntegerField()
     open_alert_count = serializers.IntegerField()
+
+class AlertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Alert
+        fields = '__all__'
+        depth = 1

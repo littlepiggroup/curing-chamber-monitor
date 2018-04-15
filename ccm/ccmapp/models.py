@@ -291,6 +291,8 @@ class Alert(models.Model):
     company = models.ForeignKey(BuildingCompany, on_delete=models.DO_NOTHING)
     project = models.ForeignKey(Project, on_delete=models.DO_NOTHING)
     status = models.CharField(max_length=10)
+    is_open = models.BooleanField()
+    alert_type = models.IntegerField()
     create_time = models.DateTimeField()
     update_time = models.DateTimeField()
 
