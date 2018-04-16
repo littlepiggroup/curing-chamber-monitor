@@ -222,6 +222,30 @@ class TempHumdtyAlert(models.Model):
     update_time = models.DateTimeField()
     updated_by = models.CharField(max_length=10)
 
+
+class TemperatureAlert(models.Model):
+    alert_type = models.IntegerField()
+    sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10)
+    create_time = models.DateTimeField()
+    created_by = models.CharField(max_length=10)
+    update_time = models.DateTimeField()
+    updated_by = models.CharField(max_length=10)
+
+
+class HumidityAlert(models.Model):
+    alert_type = models.IntegerField()
+    sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10)
+    create_time = models.DateTimeField()
+    created_by = models.CharField(max_length=10)
+    update_time = models.DateTimeField()
+    updated_by = models.CharField(max_length=10)
+
 # ----------------------------- End: Temperature/Humidity related models -----------------------------
 
 

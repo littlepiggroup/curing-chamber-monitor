@@ -5,7 +5,7 @@ from collections import namedtuple
 
 from django.db import connection
 
-from ccmapp.models import Project
+from ccmapp.models import Project, SampleAlert, VideoAlert, TemperatureAlert, HumidityAlert
 
 
 def time_para_to_days(time_range):
@@ -19,11 +19,33 @@ def time_para_to_days(time_range):
         raise Exception('Unknown time_range: %s' % time_range)
     return days
 
+
 def namedtuplefetchall(cursor):
     "Return all rows from a cursor as a namedtuple"
     desc = cursor.description
     nt_result = namedtuple('Result', [col[0] for col in desc])
     return [nt_result(*row) for row in cursor.fetchall()]
+
+
+def get_concrete_alert_count(company_id, alert_table, days = 30):
+    sql = ''
+    if company_id is None:
+        sql = '''
+        SELECT COUNT(id) AS alert_count FROM TABLE_NAME
+        WHERE (TABLE_NAME.create_time IS NULL OR TIMESTAMPDIFF(DAY, TABLE_NAME.create_time, NOW()) <= %s);
+        ''' % (days)
+    else:
+        sql = '''
+        SELECT COUNT(id) AS alert_count FROM TABLE_NAME
+        WHERE TABLE_NAME.company_id = %s
+                AND (TABLE_NAME.create_time IS NULL OR TIMESTAMPDIFF(DAY, TABLE_NAME.create_time, NOW()) <= %s);
+        ''' % (company_id, days)
+    sql = sql.replace('TABLE_NAME', alert_table)
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+        named_rows = namedtuplefetchall(cursor)
+        alert_count = named_rows[0].alert_count
+    return alert_count
 
 
 def company_phase_report(company_id, days=30):
@@ -51,6 +73,7 @@ def company_phase_report(company_id, days=30):
     else:
         # All companies data.
         report_sql = '''
+
         SELECT
             ccmapp_project.building_company_id AS building_company_id,
             ccmapp_project.id AS project_id,
@@ -61,7 +84,7 @@ def company_phase_report(company_id, days=30):
         GROUP BY ccmapp_project.id
         ;
             ''' % (days)
-
+    report_map = {}
     with connection.cursor() as cursor:
         cursor.execute(report_sql)
         named_rows = namedtuplefetchall(cursor)
@@ -72,7 +95,13 @@ def company_phase_report(company_id, days=30):
                 bad_project_counter += 1
             else:
                 good_project_counter += 1
-        return [{'normal_project_count': good_project_counter, 'alert_project_count': bad_project_counter}]
+        report_map['normal_project_count'] = good_project_counter
+        report_map['alert_project_count'] = bad_project_counter
+    for alert in [SampleAlert, VideoAlert, TemperatureAlert, HumidityAlert]:
+        key = alert.__name__.replace('Alert', '').lower() + '_alert_count'
+        report_map[key] = get_concrete_alert_count(company_id, alert._meta.db_table, days)
+
+    return [report_map]
 
 
 def get_project_filter_sql(company_id, project_id):
