@@ -111,9 +111,14 @@ class VideoAlertSerializer(serializers.ModelSerializer):
 # ----------------------------- End: video related code -----------------------------
 
 
-class TempHumdtyAlertSerializer(serializers.ModelSerializer):
+class TemperatureAlertSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.TempHumdtyAlert
+        model = models.TemperatureAlert
+
+
+class HumidityAlertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.HumidityAlert
 
 class GlobalReportSerializer(serializers.Serializer):
     project_count = serializers.IntegerField()

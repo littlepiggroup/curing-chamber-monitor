@@ -9,15 +9,22 @@ from django.db.models import Count
 from rest_framework import viewsets, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.shortcuts import render,render_to_response
+from django.template import loader,Context,RequestContext
 
 from ccmapp import models, serializers
 
 # Create your views here.
 from ccmapp.models import EzvizAccount, Camera, Video, Project, Alert, SampleAlert, GlobalReport, VideoAlert, \
-    TempHumdtyAlert
+    TemperatureAlert, HumidityAlert
 from ccmapp.serializers import EzvizAccountSerializer, CameraSerializer, VideoSerializer, GlobalReportSerializer, \
-    SampleAlertSerializer, VideoAlertSerializer, TempHumdtyAlertSerializer
+    SampleAlertSerializer, VideoAlertSerializer, TemperatureAlertSerializer, \
+    HumidityAlertSerializer
 from ccmapp.report import phase_report
+
+def index_view(request):
+    templateName = 'index.html'
+    return render_to_response(templateName, RequestContext(request, locals()))
 
 def normalize_resp(data_list):
     resp_json = [
@@ -99,10 +106,13 @@ class VideoAlertViewSet(viewsets.ModelViewSet):
     queryset = VideoAlert.objects.all()
     serializer_class = VideoAlertSerializer
 
-class TempHmdtyAlertViewSet(viewsets.ModelViewSet):
-    queryset = TempHumdtyAlert.objects.all()
-    serializer_class = TempHumdtyAlertSerializer
+class TemperatureAlertViewSet(viewsets.ModelViewSet):
+    queryset = TemperatureAlert.objects.all()
+    serializer_class = TemperatureAlertSerializer
 
+class HumidityAlertViewSet(viewsets.ModelViewSet):
+    queryset = HumidityAlert.objects.all()
+    serializer_class = HumidityAlertSerializer
 
 
 class AlertViewSet(viewsets.ModelViewSet):
@@ -126,6 +136,7 @@ class GlobalReportView(APIView):
         global_report = GlobalReport(project_count, total_open_alerts)
         serializer = GlobalReportSerializer(global_report)
         return Response(serializer.data)
+
 
 class CompanyPhaseReportView(APIView):
 

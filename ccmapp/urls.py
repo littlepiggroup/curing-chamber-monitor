@@ -17,7 +17,9 @@ router.register(r'api/cameras', views.CameraViewSet, base_name='camera')
 router.register(r'api/videos', views.VideoViewSet, base_name='video')
 router.register(r'api/sample_alerts', views.SampleAlertViewSet, base_name='sample_alert')
 router.register(r'api/video_alerts', views.VideoAlertViewSet, base_name='video_alert')
-router.register(r'api/temperature_humidity_alerts', views.TempHmdtyAlertViewSet, base_name='temperature_humidity_alert')
+router.register(r'api/temperature_alerts', views.TemperatureAlertViewSet, base_name='temperature_alert')
+router.register(r'api/humiditye_alerts', views.HumidityAlertViewSet, base_name='humidity_alert')
+
 
 router.register(r'api/alerts', views.AlertViewSet, base_name='alert')
 

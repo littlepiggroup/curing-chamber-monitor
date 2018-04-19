@@ -24,8 +24,35 @@ class BuildingCompanyUser(models.Model):
     class Meta:
         ordering = ('id',)
 
+class City(models.Model):
+    """城市"""
+    name = models.CharField(max_length=64,verbose_name=u'城市名称')
+    parent = models.ForeignKey('self',verbose_name=u'所属区域',null=True,blank=True)
+    def project_count(self):
+        return Project.objects.filter(city=self).count()
+    def project_total_count(self):
+        totalCount=Project.objects.filter(city=self).count()
+        for eachChild in City.objects.filter(parent=self):
+            totalCount += Project.objects.filter(city=eachChild).count()
+        return totalCount
+    
+    def __str__(self):
+        return self.name
+    class Meta:
+        db_table = 'diary_city'
+        verbose_name = '省市县'
+        verbose_name_plural = '城市'
 
 class Project(models.Model):
+    PRJSTATE_TYPE_CHOICES = (
+        (0,u'竣工'),
+        (1,u'在建')
+    )
+    PRJLXSTATE_TYPE_CHOICES = (
+        (0,u'未立项'),
+        (1,u'已立项')
+    )
+    
     instance_id = models.CharField(max_length=100, unique=True, null=True)
     nature = models.CharField(max_length=20, null=True)
     num = models.CharField(max_length=100, null=True)
@@ -34,8 +61,42 @@ class Project(models.Model):
     status = models.IntegerField(null=True)
     create_time = models.DateTimeField(null=True)
     last_edit_time = models.DateTimeField(null=True)
-    building_company = models.ForeignKey(BuildingCompany, related_name='projects')
+    building_company = models.ForeignKey(BuildingCompany, related_name='projects',null=True)
     added_time = models.DateTimeField(auto_now_add=True)
+    company = models.ForeignKey(BuildingCompany,null=True,verbose_name=u'公司单位',blank=True,related_name='projectlist', on_delete=models.CASCADE)
+    PrjId = models.CharField(null=True,blank=True, max_length=64,verbose_name=u'项目ID')
+    PrjName = models.CharField(null=True,blank=True, max_length=128,verbose_name=u'项目名称')
+    GCGS = models.CharField(null=True,blank=True,max_length=128,verbose_name=u'所属工程公司')
+    GCGSID = models.CharField(null=True,blank=True,max_length=64,verbose_name=u'所属公司编号')
+    PrjSFLX = models.IntegerField(verbose_name=u'是否立项',choices=PRJLXSTATE_TYPE_CHOICES, default=0)
+    PrjState = models.IntegerField(null=True,blank=True,verbose_name=u'项目状态',choices=PRJSTATE_TYPE_CHOICES)
+    gldw = models.CharField(null=True,blank=True,max_length=128,verbose_name=u'管理单位')
+    jsdw = models.CharField(null=True,blank=True,max_length=128,verbose_name=u'建设单位')
+    sjdw = models.CharField(null=True,blank=True,max_length=128,verbose_name=u'设计单位')
+    kcdw = models.CharField(null=True,blank=True,max_length=128,verbose_name=u'勘察单位')
+    jldw = models.CharField(null=True,blank=True,max_length=128,verbose_name=u'监理单位')
+    zbdw = models.CharField(null=True,blank=True,max_length=128,verbose_name=u'总包单位')
+    KGRQ = models.DateField(null=True,blank=True,verbose_name=u'开工日期')
+    JGRQ = models.DateField(null=True,blank=True,verbose_name=u'竣工日期')
+    XMGCS = models.CharField(null=True,blank=True,max_length=64,verbose_name=u'项目工程师')
+    XMGCSID = models.CharField(null=True,blank=True,max_length=64,verbose_name=u'项目工程师ID')
+    XMJL = models.CharField(null=True,blank=True,max_length=64,verbose_name=u'项目经理')
+    XMJLID = models.CharField(null=True,blank=True,max_length=64,verbose_name=u'项目经理ID')
+    city = models.ForeignKey('City',null=True,verbose_name=u'城市',blank=True)
+    latitude = models.CharField(null=True,max_length=24,blank=True)
+    longitude = models.CharField(null=True,max_length=24,blank=True)
+    address = models.CharField(null=True,blank=True,max_length=128,verbose_name=u'项目地址')
+    area = models.CharField(null=True,blank=True,verbose_name='面积',max_length=128,)
+    price = models.CharField(null=True,blank=True,verbose_name='造价',max_length=128,)
+    quality_target = models.CharField(null=True,blank=True,max_length=256,verbose_name=u'质量目标')
+    safe_target = models.CharField(null=True,blank=True,max_length=256,verbose_name=u'安全目标')
+    environment_target = models.CharField(blank=True,max_length=256,verbose_name=u'环境目标')
+    pact_target = models.CharField(null=True,blank=True,max_length=256,verbose_name=u'合同目标')
+    project_target = models.CharField(null=True,blank=True,max_length=256,verbose_name=u'项目目标')
+    culture_target = models.CharField(null=True,blank=True,max_length=256,verbose_name=u'施工文明目标')
+    deep = models.CharField(null=True,blank=True,verbose_name='深度',max_length=128,)
+    height = models.CharField(null=True,blank=True,verbose_name='高度',max_length=128,)
+    danti_nums = models.CharField(null=True,blank=True,verbose_name=u'单体数量',max_length=128)
 
     class Meta:
         ordering = ('id',)
@@ -65,7 +126,7 @@ class Contract(models.Model):
 class Sample(models.Model):
     project = models.ForeignKey(Project, related_name='+')
     contract = models.ForeignKey(Contract, related_name='+')
-    company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
+    company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE,null=True)
     instance_id = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=100)
     num = models.CharField(max_length=100, null=True)
@@ -129,10 +190,10 @@ class SampleAlert(models.Model):
     )
 
     sample = models.ForeignKey(Sample)
-    sample_name = models.CharField(max_length=50)
-    alert_type = models.IntegerField()
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
+    sample_name = models.CharField(max_length=50,null=True)
+    alert_type = models.IntegerField(null=True)
+    project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
+    company = models.ForeignKey(BuildingCompany, null=True,on_delete=models.CASCADE)
     # Created, fixing, closed.
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=CREATED)
     create_time = models.DateTimeField()
@@ -181,10 +242,10 @@ class Video(models.Model):
 # video alert may be created by user.
 class VideoAlert(models.Model):
     video = models.ForeignKey(Video, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
+    company = models.ForeignKey(BuildingCompany, null=True, on_delete=models.CASCADE)
     # auto, manual
-    alert_type = models.IntegerField()
+    alert_type = models.IntegerField(null=True)
     status = models.CharField(max_length=10)
     create_time = models.DateTimeField()
     created_by = models.CharField(max_length=10)
@@ -209,18 +270,6 @@ class Sensor(models.Model):
 
 class TempHumdtyData(models.Model):
     pass
-
-
-class TempHumdtyAlert(models.Model):
-    alert_type = models.IntegerField()
-    sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
-    status = models.CharField(max_length=10)
-    create_time = models.DateTimeField()
-    created_by = models.CharField(max_length=10)
-    update_time = models.DateTimeField()
-    updated_by = models.CharField(max_length=10)
 
 
 class TemperatureAlert(models.Model):

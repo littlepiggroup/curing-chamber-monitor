@@ -125,24 +125,53 @@ def company_projects_phase_report(company_id, project_id, days=30):
     project_filter_sql = get_project_filter_sql(company_id, project_id)
     sample_alert_count_map = get_alert_count(project_filter_sql, days, 'ccmapp_samplealert')
     video_alert_count_map = get_alert_count(project_filter_sql, days, 'ccmapp_videoalert')
-    temp_humidity_alert_count_map = get_alert_count(project_filter_sql, days, 'ccmapp_temphumdtyalert')
+    temperature_alert_count_map = get_alert_count(project_filter_sql, days, 'ccmapp_temperaturealert')
+    humidity_alert_count_map = get_alert_count(project_filter_sql, days, 'ccmapp_humidityalert')
+
     proj_ids = sample_alert_count_map.keys()
+    proj_id_to_company_name = get_project_id_to_company_name(proj_ids)
     proj_reports = []
     for proj_id in proj_ids:
         sample_alert_count = sample_alert_count_map[proj_id]
         video_alert_count = video_alert_count_map[proj_id]
-        temp_humidity_alert_count = temp_humidity_alert_count_map[proj_id]
-        score = 100.0 - (sample_alert_count * 0.5 + video_alert_count * 2.0 + temp_humidity_alert_count * 1.0)
+        temperature_alert_count = temperature_alert_count_map[proj_id]
+        humidity_alert_count = humidity_alert_count_map[proj_id]
+
+        score = 100.0 - (sample_alert_count * 0.5 + video_alert_count * 2.0 + temperature_alert_count * 1.0 + humidity_alert_count * 1.0)
         proj_reports.append({
             'project_id': proj_id,
-            'project_names': get_project_names(proj_id),
+            'project_name': get_project_name(proj_id),
+            'company_name': proj_id_to_company_name[proj_id],
             'score': score,
             'sample_alert_count': sample_alert_count,
             'video_alert_count': video_alert_count,
-            'temperature_humidity_alert_count': temp_humidity_alert_count
+            'temperature_alert_count': temperature_alert_count,
+            'humidity_alert_count': humidity_alert_count
         })
     return sorted(proj_reports, key=lambda x: x['score'])
 
+
+def get_project_name(proj_id):
+    proj = Project.objects.get(pk=proj_id)
+    return proj.PrjName
+
+def get_project_id_to_company_name(proj_ids):
+    sql = '''
+    SELECT 
+    ccmapp_project.id AS proj_id,
+    ccmapp_buildingcompany.name AS company_name 
+    from ccmapp_project LEFT JOIN ccmapp_buildingcompany 
+    ON ccmapp_project.building_company_id  = ccmapp_buildingcompany.id 
+    WHERE ccmapp_project.id in (%s);
+    ''' % ','.join([str(id) for id in proj_ids])
+    id_to_name  = {}
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+        named_rows = namedtuplefetchall(cursor)
+        for row in named_rows:
+            id_to_name[row.proj_id] = row.company_name
+
+    return id_to_name
 
 def get_project_names(proj_id):
     return [project_name.name for project_name in Project.objects.get(pk=proj_id).names.all()]
