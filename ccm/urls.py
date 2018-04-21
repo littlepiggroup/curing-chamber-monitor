@@ -13,14 +13,23 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url,include
+from django.conf.urls import url, include
 from django.contrib import admin
+from ccmauth import admin_urls as user_admin_urls
+from ccmauth import urls as auth_urls
 from ccmapp import urls as rest_urls
 from ccmapp.views import index_view
+from ccmapp import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    # url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    # auth apis including login, password reset
+    url(r'^api-auth/', include(auth_urls)),
+    # user crud apis - only used by administrator
+    url(r'^api/', include(user_admin_urls)),
+    # use phone number to get login code
+    url(r'^api-auth/access_login_code$',  views.LoginCodeAccessView.as_view(), name='ccm_user-access_login_code'),
+    # main apis
     url(r'^', include(rest_urls)),
     url(r'^index/', index_view),
 ]
