@@ -49,7 +49,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         names_data = validated_data.pop('names')
-        project = models.Project.objects.create(**validated_data)
+        project = super(ProjectSerializer, self).create(validated_data)
 
         for name_data in names_data:
             models.ProjectName.objects.create(project=project, **name_data)

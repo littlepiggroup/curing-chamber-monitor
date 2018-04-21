@@ -120,6 +120,8 @@ LOGGING = {
 
 ALLOWED_HOSTS = []
 
+AUTH_USER_MODEL = 'ccmapp.User'
+
 
 # Application definition
 
@@ -133,6 +135,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'django_crontab',
+    'ccmauth',
     'ccmapp'
 ]
 
@@ -189,6 +192,15 @@ DATABASES = {
 }
 
 
+# Password encryption
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    'django.contrib.auth.hashers.BCryptPasswordHasher',
+]
+
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 
@@ -210,14 +222,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
-    # 'DEFAULT_PERMISSION_CLASSES': (
-    #     'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    # ),
-    # 'DEFAULT_AUTHENTICATION_CLASSES': (
-    #     'rest_framework.authentication.SessionAuthentication',
-    #     'rest_framework.authentication.BasicAuthentication'
-    # ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'ccmauth.authentication.CsrfExemptSessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication'
+    ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
         #  Enable BrowsableAPI

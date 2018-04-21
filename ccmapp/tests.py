@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 import time
 import unittest
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -12,9 +14,23 @@ from rest_framework.test import APITestCase
 from .models import Project, BuildingCompany, ProjectName, Camera, EzvizAccount, Video
 
 
-class ProjectApiTests(APITestCase):
+class CcmApiTestCase(APITestCase):
+    def _force_authenticate(self):
+        user_model = get_user_model()
+        # create an user using user model directly
+        user = user_model(password="123456", is_active=True)
+        setattr(user, user_model.USERNAME_FIELD, "13482777788")
+        user.save()
+        # force authenticate via created user
+        key = {user_model.USERNAME_FIELD: "13482777788"}
+        user = user_model.objects.get(**key)
+        self.client.force_authenticate(user=user)
+
+
+class ProjectApiTests(CcmApiTestCase):
 
     def test_create_company_project_api(self):
+        self._force_authenticate()
         # Step 1: add building_company_users as the source to fetch data from sample website.
         req_body = {"login_name": "login_name_to_sample_website"}
         url = reverse('building_company_user-list')
@@ -94,6 +110,7 @@ class ProjectApiTests(APITestCase):
         self.assertTrue(video.url_path.find('static/videos/1-762881292') == 0)
 
     def test_project_ordering(self):
+        self._force_authenticate()
         building_company = BuildingCompany(name="test_company")
         building_company.save()
         building_company2 = BuildingCompany(name="test_company_2")
@@ -115,6 +132,7 @@ class ProjectApiTests(APITestCase):
         self.assertEquals(building_company2.id, response.data['results'][1]['building_company'])
 
     def test_ezviz(self):
+        self._force_authenticate()
         # Create ezviz account
         url = reverse('ezviz_account-list')
         data = {"user_name":"ezviz_name", "app_key":"app_key_value", "secret":"secreet_value"}
@@ -150,6 +168,65 @@ class ProjectApiTests(APITestCase):
     def test_month_project_report(self):
         # TODO.
         pass
+
+
+class AuthApiTest(CcmApiTestCase):
+    def test_user_register(self):
+        user_model = get_user_model()
+        req_body = {user_model.USERNAME_FIELD: "13482777788"}
+        url = reverse('ccm_user-register')
+        resp = self.client.post(url, req_body, format='json')
+        self.assertEqual(status.HTTP_201_CREATED, resp.status_code)
+
+    def test_user_login(self):
+        # force authenticate to create a user, then use this user to do login test
+        self._force_authenticate()
+        user_model = get_user_model()
+        req_body = {user_model.USERNAME_FIELD: "13493893332", "password": "123456"}
+        url = reverse('ccm_user-list')
+        resp = self.client.post(url, req_body, format='json')
+        # do login test
+        self.assertEqual(status.HTTP_201_CREATED, resp.status_code)
+        req_body = {user_model.USERNAME_FIELD: "13493893332", "password": "123456"}
+        url = reverse('ccm_user-login')
+        resp = self.client.post(url, req_body, format='json')
+        self.assertEqual(status.HTTP_200_OK, resp.status_code)
+
+    def test_user_login_failed(self):
+        user_model = get_user_model()
+        req_body = {user_model.USERNAME_FIELD: "13493893332", "password": "123456"}
+        url = reverse('ccm_user-login')
+        resp = self.client.post(url, req_body, format='json')
+        self.assertEqual(status.HTTP_401_UNAUTHORIZED, resp.status_code)
+
+    def test_change_password(self):
+        user_model = get_user_model()
+        user = user_model(password="123456", is_active=True)
+        setattr(user, user_model.USERNAME_FIELD, "13493893332")
+        user.save()
+        user = user_model.objects.get(id=user.id)
+        self.assertEqual("13493893332", getattr(user, user_model.USERNAME_FIELD))
+        self.assertEqual("123456", user.password)
+        req_body = {user_model.USERNAME_FIELD: "13493893332"}
+        url = reverse('ccm_user-password_change')
+        resp = self.client.post(url, req_body, format='json')
+        self.assertEqual(status.HTTP_200_OK, resp.status_code)
+        user = user_model.objects.get(id=user.id)
+        self.assertEqual("13493893332", getattr(user, user_model.USERNAME_FIELD))
+        self.assertEqual(False, check_password("123456", user.password))
+
+    def test_access_login_code(self):
+        user_model = get_user_model()
+        req_body = {user_model.USERNAME_FIELD: "13493893332"}
+        url = reverse('ccm_user-access_login_code')
+        resp = self.client.post(url, req_body, format='json')
+        self.assertEqual(status.HTTP_201_CREATED, resp.status_code)
+        try:
+            user = user_model.objects.get(**req_body)
+        except user_model.DoesNotExist:
+            self.fail("test_access_login_code failed.")
+        self.assertEqual("13493893332", getattr(user, user_model.USERNAME_FIELD))
+        self.assertIsNotNone(user.password)
 
 
 # Test db behavior

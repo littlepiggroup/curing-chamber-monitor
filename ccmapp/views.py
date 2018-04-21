@@ -5,12 +5,16 @@ import datetime as DT
 from collections import OrderedDict
 
 import django_filters.rest_framework
+from django.contrib.auth import get_user_model
 from django.db.models import Count
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
+from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import render,render_to_response
 from django.template import loader,Context,RequestContext
+from django.utils.translation import ugettext_lazy as _
 
 from ccmapp import models, serializers
 
@@ -21,6 +25,43 @@ from ccmapp.serializers import EzvizAccountSerializer, CameraSerializer, VideoSe
     SampleAlertSerializer, VideoAlertSerializer, TemperatureAlertSerializer, \
     HumidityAlertSerializer
 from ccmapp.report import phase_report
+from ccmauth.serializers import UserRegisterSerializer, UserPasswordResetSerializer
+
+
+# ----------------------------- Start: auth related views -----------------------------
+
+class LoginCodeAccessView(GenericAPIView):
+    permission_classes = (AllowAny, )
+
+    def post(self, request, *args, **kwargs):
+        errors = None
+        user_model = get_user_model()
+        phone = self.request.data.get(user_model.USERNAME_FIELD)
+        is_new_user = False
+        if phone:
+            data = {user_model.USERNAME_FIELD: phone}
+            serializer = self.get_serializer(**data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            if isinstance(serializer, UserRegisterSerializer):
+                is_new_user = True
+        else:
+            errors = {'detail': _("Must include '%s'." % user_model.USERNAME_FIELD)}
+        if errors:
+            return Response(data=errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=(status.HTTP_201_CREATED if is_new_user else status.HTTP_200_OK))
+
+    def get_serializer(self, **kwargs):
+        user_model = get_user_model()
+
+        try:
+            user_model.objects.get(**kwargs)
+            return UserPasswordResetSerializer(data=kwargs)
+        except user_model.DoesNotExist:
+            return UserRegisterSerializer(data=kwargs)
+
+# ----------------------------- End: auth related views -----------------------------
+
 
 def index_view(request):
     templateName = 'index.html'
@@ -35,48 +76,51 @@ def normalize_resp(data_list):
     ]
     return OrderedDict(resp_json)
 
+
 class BuildingCompanyViewSet(viewsets.ModelViewSet):
     queryset = models.BuildingCompany.objects.all()
     serializer_class = serializers.BuildingCompanySerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
-    filter_fields = ('name', 'disabled', 'added_time')
-    ordering_fields = ('name', 'disabled', 'added_time')
+    filter_fields = ('id', 'name', 'disabled', 'added_time')
+    ordering_fields = ('id', 'name', 'disabled', 'added_time')
 
 
 class BuildingCompanyUserViewSet(viewsets.ModelViewSet):
     queryset = models.BuildingCompanyUser.objects.all()
     serializer_class = serializers.BuildingCompanyUserSerializer
-    filter_fields = ('login_name', 'instance_id', 'disabled', 'building_company', 'added_time')
-    ordering_fields = ('login_name', 'disabled', 'building_company', 'added_time')
+    filter_fields = ('id', 'login_name', 'disabled', 'building_company', 'added_time')
+    ordering_fields = ('id', 'login_name', 'disabled', 'building_company', 'added_time')
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
-    filter_fields = ('status', 'nature', 'create_time', 'region', 'address',
+    filter_fields = ('id', 'status', 'nature', 'create_time', 'region', 'address',
                      'last_edit_time', 'building_company', 'instance_id', 'added_time')
     search_fields = ('nature', 'region', 'address')
-    ordering_fields = ('status', 'nature', 'create_time', 'region', 'address',
+    ordering_fields = ('id', 'status', 'nature', 'create_time', 'region', 'address',
                        'last_edit_time', 'building_company', 'added_time')
 
 
 class ProjectNameViewSet(viewsets.ModelViewSet):
     queryset = models.ProjectName.objects.all()
     serializer_class = serializers.ProjectNameSerializer
-    filter_fields = ('project', 'name', 'added_time')
-    ordering_fields = ('project', 'name', 'added_time')
+    filter_fields = ('id', 'project', 'name', 'added_time')
+    ordering_fields = ('id', 'project', 'name', 'added_time')
 
 
 class SampleViewSet(viewsets.ModelViewSet):
     queryset = models.Sample.objects.all()
     serializer_class = serializers.SampleSerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
-    filter_fields = ('name', 'project', 'item_name', 'kind_name',
+    filter_fields = ('id', 'name', 'project', 'item_name', 'kind_name',
                      'core_code_id', 'core_code_id_end', 'status')
     search_fields = ('name',)
-    ordering_fields = ('name', 'project', 'item_name', 'kind_name',
+    ordering_fields = ('id', 'name', 'project', 'item_name', 'kind_name',
                        'core_code_id', 'core_code_id_end', 'status')
+
+
 class SampleAlertViewSet(viewsets.ModelViewSet):
     queryset = SampleAlert.objects.all()
     serializer_class = SampleAlertSerializer

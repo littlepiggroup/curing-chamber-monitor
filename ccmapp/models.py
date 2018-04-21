@@ -1,7 +1,62 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import re
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
+
+# ----------------------------- Start: auth related models -----------------------------
+from rest_framework.exceptions import ValidationError
+
+from ccmauth.models import AbstractUser
+
+_pattern = re.compile(r"^((\d{3,4}-)?\d{7,8})$|(1[3-9][0-9]{9})")
+
+
+def _phone_validator(phone):
+    if not _pattern.match(phone):
+        raise ValidationError(
+            _('%s is a invalid phone number' % phone),
+        )
+
+
+class User(AbstractUser):
+    USERNAME_FIELD = "phone"
+
+    phone = models.CharField(
+        _('phone'),
+        max_length=100,
+        unique=True,
+        help_text=_('Required. cell phone number.'),
+        validators=[_phone_validator],
+        error_messages={
+            'unique': _("The phone is already registered."),
+        },
+    )
+
+    class Meta:
+        ordering = ('id',)
+
+    def _generate_password(self):
+        return self.phone + "_123456"
+
+    def register_pre_process(self, validate_data):
+        validate_data["password"] = self._generate_password()
+
+    def register_post_process(self):
+        print("%s\n" % self._password)
+
+    def password_reset_pre_process(self, validate_data):
+        validate_data["password"] = "old_password"
+        validate_data["new_password"] = self._generate_password()
+
+    def password_reset_post_process(self):
+        print("%s\n" % self._password)
+
+    def password_reset_password_check(self, raw_password):
+        return True  # don't need to verify the password when reset new password
+
+# ----------------------------- End: auth related models -----------------------------
 
 
 class BuildingCompany(models.Model):
@@ -19,7 +74,7 @@ class BuildingCompanyUser(models.Model):
     login_name = models.CharField(max_length=100, unique=True)
     building_company = models.ForeignKey(BuildingCompany, related_name='users', null=True)
     disabled = models.BooleanField(default=False)
-    added_time = models.DateTimeField(auto_now_add=True)
+    added_time = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ('id',)
