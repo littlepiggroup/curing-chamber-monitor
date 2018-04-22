@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.hashers import make_password
-from rest_framework import serializers
+from rest_framework import serializers, exceptions
 from rest_framework.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
@@ -11,7 +11,7 @@ from django.utils.translation import ugettext_lazy as _
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        exclude = ('is_staff', 'is_superuser')
+        exclude = ('is_superuser', )
         extra_kwargs = {'password': {'write_only': True}, 'date_joined': {'read_only': True}}
 
     def create(self, validated_data):
@@ -60,7 +60,7 @@ class UserPasswordResetSerializer(UserSerializer):
         fields = (get_user_model().USERNAME_FIELD, 'password')
 
     def is_valid(self, raise_exception=False):
-        errors = None
+        err = None
         user_model = get_user_model()
         login_name = self.initial_data.get(user_model.USERNAME_FIELD)
         if login_name:
@@ -68,31 +68,32 @@ class UserPasswordResetSerializer(UserSerializer):
             try:
                 user = user_model.objects.get(**key)
                 if not user.is_active:
-                    errors = {'detail': _('User account disabled.')}
+                    err = ValidationError({'detail': _('User account disabled.')})
                 else:
                     user.password_reset_pre_process(self.initial_data)
                     password = self.initial_data.get('password')
                     new_password = self.initial_data.get('new_password')
                     if password and new_password:
                         if password == new_password:
-                            errors = {'detail': _('The new password is same as before.')}
+                            err = ValidationError({'detail': _('The new password is same as before.')})
                         elif not user.password_reset_password_check(password):
-                            errors = {'detail': _('Password is not correct.')}
+                            err = exceptions.AuthenticationFailed()
                         else:
                             self.password_reset_user = user
                     else:
-                        errors = {'detail': _("Must include '%s', '%s' and '%s'." % (user_model.USERNAME_FIELD,
-                                                                                     'password', 'new_password'))}
+                        err = ValidationError({'detail': _("Must include '%s', '%s' and '%s'." %
+                                                                    (user_model.USERNAME_FIELD,  'password',
+                                                                     'new_password'))})
             except user_model.DoesNotExist:
-                errors = {'detail': _('User is not existed.')}
+                err = ValidationError({'detail': _('User is not existed.')})
         else:
-            errors = {'detail': _("Must include '%s', '%s' and '%s'." % (user_model.USERNAME_FIELD,
-                                                                         'password', 'new_password'))}
+            err = exceptions.NotAuthenticated({'detail': _("Must include '%s', '%s' and '%s'." %
+                                                           (user_model.USERNAME_FIELD, 'password', 'new_password'))})
 
-        if errors and raise_exception:
-            raise ValidationError(errors)
+        if err and raise_exception:
+            raise err
 
-        return not bool(errors)
+        return not err
 
     def save(self, **kwargs):
         self.password_reset_user.set_password(self.initial_data["new_password"])
@@ -113,7 +114,7 @@ class UserLoginSerializer(UserSerializer):
         read_only_fields = (get_user_model().USERNAME_FIELD, 'password')
 
     def is_valid(self, raise_exception=False):
-        errors = None
+        err = None
         user_model = get_user_model()
         login_name = self.initial_data.get(user_model.USERNAME_FIELD)
         password = self.initial_data.get('password')
@@ -121,18 +122,19 @@ class UserLoginSerializer(UserSerializer):
             user = authenticate(**self.initial_data)
             if user:
                 if not user.is_active:
-                    errors = {'detail': _('User account disabled.')}
+                    err = exceptions.AuthenticationFailed({'detail': _('User account disabled.')})
                 else:
                     self.authencated_user = user
             else:
-                errors = {'detail': _('Unable to login with provided credentials.')}
+                raise exceptions.AuthenticationFailed()
         else:
-            errors = {'detail': _("Must include '%s' and '%s'." % (user_model.USERNAME_FIELD, 'password'))}
+            err = exceptions.NotAuthenticated({'detail': _("Must include '%s', '%s' and '%s'." %
+                                                           (user_model.USERNAME_FIELD, 'password', 'new_password'))})
 
-        if errors and raise_exception:
-            raise ValidationError(errors)
+        if err and raise_exception:
+            raise err
 
-        return not bool(errors)
+        return not err
 
     def save(self, **kwargs):
         pass
@@ -146,6 +148,3 @@ class UserDetailSerializer(UserSerializer):
         model = get_user_model()
         exclude = ('is_staff', 'is_superuser', 'is_active', 'password')
         read_only_fields = ('date_joined', )
-
-    def save(self, **kwargs):
-        pass
