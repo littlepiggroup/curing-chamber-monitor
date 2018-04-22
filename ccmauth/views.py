@@ -4,26 +4,26 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth import (login as django_login, logout as django_logout)
-from django.utils.translation import ugettext_lazy as _
 from rest_framework import viewsets, status
-from rest_framework.exceptions import ValidationError
-from rest_framework.generics import CreateAPIView, GenericAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ccmauth.permissions import UsersAdminPermissions
 from ccmauth.serializers import UserSerializer, UserRegisterSerializer, UserLoginSerializer, \
-    UserPasswordResetSerializer
+    UserPasswordResetSerializer, UserDetailSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
+    permission_classes = (UsersAdminPermissions, )
 
-    filter_fields = ('id', get_user_model().USERNAME_FIELD, 'first_name', 'last_name', 'is_active',
-                     'is_superuser', 'date_joined', 'last_login')
-    ordering_fields = ('id', get_user_model().USERNAME_FIELD, 'first_name', 'last_name', 'is_active',
-                       'is_superuser', 'date_joined', 'last_login')
+    filter_fields = ('id', get_user_model().USERNAME_FIELD, 'first_name', 'last_name', 'is_active', 'is_staff',
+                     'date_joined', 'last_login')
+    ordering_fields = ('id', get_user_model().USERNAME_FIELD, 'first_name', 'last_name', 'is_active', 'is_staff',
+                       'date_joined', 'last_login')
 
 
 class RegisterView(CreateAPIView):
@@ -41,10 +41,7 @@ class PasswordResetView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         # Return the success message with OK HTTP status
-        return Response(
-            {"detail": _("Succeed. Password reset notification has been sent.")},
-            status=status.HTTP_200_OK
-        )
+        return Response(status=status.HTTP_200_OK)
 
 
 class LoginView(GenericAPIView):
@@ -59,7 +56,7 @@ class LoginView(GenericAPIView):
         serializer = self.get_serializer(data=self.request.data, context={'request': request})
         try:
             serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
+        except Exception as e:
             return Response(data={'detail': e.detail}, status=status.HTTP_401_UNAUTHORIZED)
 
         return self.login(request, serializer.authencated_user)
@@ -81,3 +78,20 @@ class LogoutView(APIView):
         else:
             response = self.http_method_not_allowed(request, *args, **kwargs)
         return self.finalize_response(request, response, *args, **kwargs)
+
+
+class UserMeView(UpdateAPIView):
+    queryset = get_user_model().objects.filter(is_active=True)
+    serializer_class = UserDetailSerializer
+
+    def get(self, request, format=None):
+        return Response(self.serializer_class(request.user).data)
+
+    def put(self, request, *args, **kwargs):
+        self.kwargs['pk'] = request.user.id
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        self.kwargs['pk'] = request.user.id
+        return self.partial_update(request, *args, **kwargs)
+

@@ -6,8 +6,8 @@ import unittest
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
+from django.core.urlresolvers import reverse
 from django.test import TestCase
-from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -18,7 +18,7 @@ class CcmApiTestCase(APITestCase):
     def _force_authenticate(self):
         user_model = get_user_model()
         # create an user using user model directly
-        user = user_model(password="123456", is_active=True)
+        user = user_model(password="123456", is_active=True, is_superuser=True)
         setattr(user, user_model.USERNAME_FIELD, "13482777788")
         user.save()
         # force authenticate via created user

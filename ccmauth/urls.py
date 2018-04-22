@@ -11,7 +11,8 @@ urlpatterns = [
     url(r'^register$', views.RegisterView.as_view(), name='ccm_user-register'),
     url(r'^login$', views.LoginView.as_view(), name='ccm_user-login'),
     url(r'^logout$', views.LogoutView.as_view(), name='ccm_user-logout'),
-    url(r'^password/change$', views.PasswordResetView.as_view(), name='ccm_user-password_change')
+    url(r'^password/change$', views.PasswordResetView.as_view(), name='ccm_user-password_change'),
+    url(r'^me$', views.UserMeView.as_view(), name='ccm_user-me')
 ]
 
 
