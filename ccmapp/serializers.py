@@ -56,6 +56,24 @@ class ProjectSerializer(serializers.ModelSerializer):
         return project
 
 
+class UserCollectProjectSerializer(serializers.ModelSerializer):
+    project = serializers.PrimaryKeyRelatedField(many=False, queryset=models.Project.objects.all(), required=True)
+    user = serializers.PrimaryKeyRelatedField(many=False, queryset=models.User.objects.all(), required=True)
+
+    class Meta:
+        model = models.UserCollectProject
+        depth = 1
+
+
+class UserFollowProjectSerializer(serializers.ModelSerializer):
+    project = serializers.PrimaryKeyRelatedField(many=False, queryset=models.Project.objects.all(), required=True)
+    user = serializers.PrimaryKeyRelatedField(many=False, queryset=models.User.objects.all(), required=True)
+
+    class Meta:
+        model = models.UserFollowProject
+        depth = 1
+
+
 class SampleSerializer(serializers.ModelSerializer):
     project = serializers.PrimaryKeyRelatedField(many=False, queryset=models.Project.objects.all())
 

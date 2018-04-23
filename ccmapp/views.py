@@ -8,6 +8,7 @@ import django_filters.rest_framework
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from rest_framework import viewsets, filters, status
+from rest_framework.decorators import detail_route
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -101,6 +102,66 @@ class ProjectViewSet(viewsets.ModelViewSet):
     search_fields = ('nature', 'region', 'address')
     ordering_fields = ('id', 'status', 'nature', 'create_time', 'region', 'address',
                        'last_edit_time', 'building_company', 'added_time')
+
+    @detail_route(methods=['post'], url_path='collect')
+    def collect(self, request, pk=None):
+        iterator = models.UserCollectProject.objects.filter(project_id=pk, user_id=request.user.id)
+
+        if iterator:
+            errors = {'detail': _("Project already collected.")}
+            return Response(data=errors, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            project = models.Project.objects.get(id=pk)
+        except models.Project.DoesNotExist:
+            errors = {'detail': _("Project not existed.")}
+            return Response(data=errors, status=status.HTTP_400_BAD_REQUEST)
+        data = {"user": request.user.id, "project": project.id}
+        serializer = serializers.UserCollectProjectSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK)
+
+    @detail_route(methods=['post'], url_path='uncollect')
+    def uncollect(self, request, pk=None):
+        iterator = models.UserCollectProject.objects.filter(project_id=pk, user_id=request.user.id)
+
+        if iterator:
+            iterator.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        errors = {'detail': _("Project not collected.")}
+        return Response(data=errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @detail_route(methods=['post'], url_path='follow')
+    def follow(self, request, pk=None):
+        iterator = models.UserFollowProject.objects.filter(project_id=pk, user_id=request.user.id)
+
+        if iterator:
+            errors = {'detail': _("Project already followed.")}
+            return Response(data=errors, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            project = models.Project.objects.get(id=pk)
+        except models.Project.DoesNotExist:
+            errors = {'detail': _("Project not existed.")}
+            return Response(data=errors, status=status.HTTP_400_BAD_REQUEST)
+        data = {"user": request.user.id, "project": project.id}
+        serializer = serializers.UserFollowProjectSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK)
+
+    @detail_route(methods=['post'], url_path='unfollow')
+    def unfollow(self, request, pk=None):
+        iterator = models.UserFollowProject.objects.filter(project_id=pk, user_id=request.user.id)
+
+        if iterator:
+            iterator.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        errors = {'detail': _("Project not followed.")}
+        return Response(data=errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProjectNameViewSet(viewsets.ModelViewSet):
