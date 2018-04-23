@@ -260,6 +260,17 @@ class SampleAlert(models.Model):
         ordering = ('id',)
 
 
+class UserCollectProject(models.Model):
+    project = models.ForeignKey(Project, related_name='+')
+    user = models.ForeignKey(User, related_name='+')
+    collected_time = models.DateTimeField(auto_now=True)
+
+
+class UserFollowProject(models.Model):
+    project = models.ForeignKey(Project, related_name='+')
+    user = models.ForeignKey(User, related_name='+')
+    followed_time = models.DateTimeField(auto_now=True)
+
 # ----------------------------- Start: video related models -----------------------------
 class EzvizAccount(models.Model):
     user_name = models.CharField(max_length=50)

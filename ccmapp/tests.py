@@ -56,6 +56,26 @@ class ProjectApiTests(CcmApiTestCase):
         # fetch the sample data from sample website. And you can also run manually, python manage.py syc_samples to
         # fetch data.
 
+    def test_collect_project(self):
+        # Prepare data
+        self.test_create_company_project_api()
+        url = reverse('project-collect', kwargs={"pk": 1})
+        resp = self.client.post(url, format='json')
+        self.assertEqual(status.HTTP_200_OK, resp.status_code)
+        url = reverse('project-uncollect', kwargs={"pk": 1})
+        resp = self.client.post(url, format='json')
+        self.assertEqual(status.HTTP_204_NO_CONTENT, resp.status_code)
+
+    def test_follow_project(self):
+        # Prepare data
+        self.test_create_company_project_api()
+        url = reverse('project-follow', kwargs={"pk": 1})
+        resp = self.client.post(url, format='json')
+        self.assertEqual(status.HTTP_200_OK, resp.status_code)
+        url = reverse('project-unfollow', kwargs={"pk": 1})
+        resp = self.client.post(url, format='json')
+        self.assertEqual(status.HTTP_204_NO_CONTENT, resp.status_code)
+
     def test_video_related_api(self):
         # Prepare data
         self.test_create_company_project_api()
