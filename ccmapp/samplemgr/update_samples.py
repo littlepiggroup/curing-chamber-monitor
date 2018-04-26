@@ -68,7 +68,6 @@ class Sync(object):
                                     logger.info("Got building company name: %s" % building_company_name)
                                     building_company = models.BuildingCompany.objects.get(name=building_company_name)
                                     if building_company:
-                                        building_company.name = building_company_name
                                         building_company.instance_id = contract_item["_BuildUnitID"]
                                         building_company.save()
                                         building_company_user.building_company_id = building_company.id
@@ -81,6 +80,29 @@ class Sync(object):
                 exstr = traceback.format_exc()
                 logger.error('Sync error for build company user %d: %s %s' %
                              (building_company_user.id, type(e), exstr))
+
+        building_companies = models.BuildingCompany.objects.filter(instance_id=None, disabled=False)
+        if len(building_companies) > 0:
+            for building_company in building_companies:
+                try:
+                    building_company_user = models.BuildingCompanyUser.objects.get(building_company_id=building_company.id)
+                    raw_data = self._get_raw_data(self.project_retriever.retrieve(
+                        page_num=1, build_unit_user_id=building_company_user.instance_id))
+                    if raw_data:
+                        for project_item in raw_data:
+                            contract_raw_data = self._get_raw_data(self.contract_retriever
+                                                                   .retrieve(project_id=project_item["_Id"]))
+                            logger.debug("Got contract data: %s" % contract_raw_data)
+                            if contract_raw_data:
+                                for contract_item in contract_raw_data:
+                                    building_company_name = contract_item["_BuildUnitName"]
+                                    logger.info("Got building company name: %s" % building_company_name)
+                                    building_company.instance_id = contract_item["_BuildUnitID"]
+                                    building_company.save()
+                                    break
+                                break
+                except models.BuildingCompanyUser.DoesNotExist:
+                    continue
 
     def _do_sync(self, building_company):
         """
@@ -97,7 +119,7 @@ class Sync(object):
                 if building_company.instance_id and building_company_user.instance_id:
                     self._projects_sync(building_company, building_company_user)
                 else:
-                    logger.warn("One of them is None."
+                    logger.warn("One of them is None.\n"
                                 "building_company.instance_id: %s,building_company_user.instance_id: %s" %
                                 (building_company.instance_id, building_company_user.instance_id))
             except Exception as e:
@@ -120,7 +142,7 @@ class Sync(object):
                                                   build_unit_user_id=building_company_user.instance_id)
             raw_data = self._get_raw_data(rep)
             if raw_data:
-                self._do_projects_sync(raw_data, building_company_user)
+                self._do_projects_sync(raw_data, building_company)
                 if "page_info" in rep["result"] and "page_count" in rep["result"]["page_info"]:
                     page_count = rep["result"]["page_info"]["page_count"]
                     left_pages = page_count - 1
@@ -131,20 +153,22 @@ class Sync(object):
                                                               build_unit_user_id=building_company_user.instance_id)
                         raw_data = self._get_raw_data(rep)
                         if raw_data:
-                            self._do_projects_sync(raw_data, building_company_user)
+                            self._do_projects_sync(raw_data, building_company)
                         left_pages -= 1
         except Exception as e:
             exstr = traceback.format_exc()
             logger.error('Sync page %d of projects error: %s %s' % (current_page, type(e), exstr))
 
     def _do_projects_sync(self, raw_data, building_company):
-        registered_projects = models.Project.objects.filter(building_company_id=building_company.id)
+        registered_projects = models.Project.objects.filter(company_id=building_company.id)
         logger.info("registered projects: %s" % registered_projects)
         registered_projects_by_instance_id = dict([(item.instance_id, item) for item in registered_projects
                                                    if item.instance_id])
         registered_project_by_name = {}
         for item in registered_projects:
             if item.id not in registered_projects_by_instance_id.keys():
+                if item.PrjName:
+                    registered_project_by_name[item.PrjName] = item
                 names = models.ProjectName.objects.filter(project_id=item.id)
                 if names:
                     for name in names:
@@ -238,10 +262,12 @@ class Sync(object):
             try:
                 sample = models.Sample.objects.get(instance_id=sample_item["_Id"])
                 if sample.exam_result != sample_item["_Exam_Result"] \
-                        or sample.status != int(sample_item["_Sample_Status"]):
+                        or sample.status != int(sample_item["_Sample_Status"]) \
+                        or sample.regular != bool(sample_item["_Sample_Regular"]):
                     sample.exam_result = int(sample_item["_Exam_Result"].replace('%', ''))
                     sample.status = int(sample_item["_Sample_Status"])
                     sample.status_str = sample_item["_SampleStatusStr"]
+                    sample.regular = bool(sample_item["_Sample_Regular"])
                     sample.save()
             except models.Sample.DoesNotExist:
                 sample = models.Sample.objects.create(instance_id=sample_item["_Id"],

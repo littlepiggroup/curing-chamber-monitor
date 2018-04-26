@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from pydoc import locate
 
 from django.conf import settings
-from rest_framework.permissions import BasePermission, IsAdminUser
+from rest_framework.permissions import BasePermission
 
 
 class IsSuperUser(BasePermission):
@@ -24,8 +24,6 @@ class UsersAdminPermissions(BasePermission):
     users_admin_permission_class = None
     if users_admin_permission_class_name:
         users_admin_permission_class = locate(users_admin_permission_class_name)
-    elif users_admin_permission_class_name != "":
-        users_admin_permission_class = IsAdminUser
     if users_admin_permission_class:
         permission_classes = (IsSuperUser, users_admin_permission_class)
     else:
