@@ -35,7 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserRegisterSerializer(UserSerializer):
     class Meta:
         model = get_user_model()
-        exclude = ('is_staff', 'is_superuser', 'is_active')
+        exclude = ('is_staff', 'is_superuser', 'is_active', 'groups', 'user_permissions')
         read_only_fields = ('date_joined',)
         extra_kwargs = {'password': {'write_only': True}}
 

@@ -118,7 +118,7 @@ LOGGING = {
     }
 }
 
-ALLOWED_HOSTS = ['localhost', '192.168.16.105']
+ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'ccmapp.User'
 
