@@ -98,10 +98,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ProjectSerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
     filter_fields = ('id', 'status', 'nature', 'create_time', 'region', 'address',
-                     'last_edit_time', 'building_company', 'instance_id', 'added_time')
+                     'last_edit_time', 'building_company', 'instance_id', 'added_time', 'PrjName')
     search_fields = ('nature', 'region', 'address')
     ordering_fields = ('id', 'status', 'nature', 'create_time', 'region', 'address',
-                       'last_edit_time', 'building_company', 'added_time')
+                       'last_edit_time', 'building_company', 'added_time', 'PrjName')
 
     @detail_route(methods=['post'], url_path='collect')
     def collect(self, request, pk=None):

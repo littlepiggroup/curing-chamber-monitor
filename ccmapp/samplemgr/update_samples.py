@@ -66,13 +66,15 @@ class Sync(object):
                                 for contract_item in contract_raw_data:
                                     building_company_name = contract_item["_BuildUnitName"]
                                     logger.info("Got building company name: %s" % building_company_name)
-                                    building_company = models.BuildingCompany.objects.get(name=building_company_name)
-                                    if building_company:
+                                    try:
+                                        building_company = models.BuildingCompany.objects.get(name=building_company_name)
                                         building_company.instance_id = contract_item["_BuildUnitID"]
                                         building_company.save()
                                         building_company_user.building_company_id = building_company.id
                                         updated_building_company_user = True
                                         break
+                                    except models.BuildingCompany.DoesNotExist:
+                                        continue
                                 break
                 if updated_building_company_user:
                     building_company_user.save()
