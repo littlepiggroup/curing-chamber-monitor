@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from django.core.management.base import BaseCommand
 
-from ccmapp.samplemgr.update_projects import getPrjInfo1
+from ccmapp.samplemgr.update_projects import getPrjInfo
 
 
 class Command(BaseCommand):
@@ -14,4 +14,4 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
-        getPrjInfo1()
+        getPrjInfo()

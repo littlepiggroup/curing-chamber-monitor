@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import logging
 import sys
 import httplib, socket
 import xml.etree.ElementTree as ET
 import base64
 
 from ccmapp.models import *
+from ccmapp.samplemgr.retriever import UserInfoRetriever
+from ccmapp.samplemgr.update_samples import Sync
+
+logger = logging.getLogger("projects.sync")
+
+user_info_retriever = UserInfoRetriever()
 
 reload(sys)
 sys.setdefaultencoding('utf8')
-account = "720e9000-4fd4-4bab-b8fa-139e5d0d0080"
+test_account = "720e9000-4fd4-4bab-b8fa-139e5d0d0080"
 socket.setdefaulttimeout(2)
 
 
@@ -26,13 +33,13 @@ def updateCom():
                 eachPrj.save()
 
 
-def getPrjInfo1():
+def getPrjInfo1(account):
     ''' 获取项目立项信息    '''
     SoapMessage = '''<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <getPrjInfo xmlns="http://tempuri.org/">
-      <Account>720e9000-4fd4-4bab-b8fa-139e5d0d0080</Account>
+      <Account>''' + account + '''</Account>
     </getPrjInfo>
   </soap:Body>
 </soap:Envelope>'''
@@ -66,7 +73,6 @@ def getPrjInfo1():
                         Project.objects.filter(PrjId=child.attrib["PrjId"]).update(**child.attrib)
                         pass
                     else:
-                        print 1
                         newPrj = Project.objects.create(**child.attrib)
                         newPrj.save()
                 except:
@@ -136,7 +142,7 @@ def getPrjInfo():
         traceback.print_exc()
 
 
-def getSGFAWFDealInfo(faid):
+def getSGFAWFDealInfo(account, faid):
     ''' 获取指定施工方案的流程意见 '''
     SoapMessage = '''<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
@@ -180,7 +186,7 @@ def getSGFAWFDealInfo(faid):
         return []
 
 
-def getSGFAWFAttachInfo(faid):
+def getSGFAWFAttachInfo(account, faid):
     ''' 获取指定施工方案的附件信息 '''
     SoapMessage = '''<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
@@ -224,5 +230,26 @@ def getSGFAWFAttachInfo(faid):
         return []
 
 
+def getPrjInfo():
+    building_company_users = BuildingCompanyUser.objects.filter(disabled=False)
+    if len(building_company_users) == 0:
+        logger.info("Not find build company user!")
+    for building_company_user in building_company_users:
+        try:
+            # 还没有instance_id, 同步instance_id
+            if not building_company_user.instance_id:
+                raw_data = Sync._get_raw_data(user_info_retriever.retrieve(building_company_user.login_name))
+                if raw_data:
+                    building_company_user.instance_id = raw_data[0]["UserId"]
+                    building_company_user.save()
+        except Exception as e:
+            exstr = traceback.format_exc()
+            logger.error('Sync projects error for build company user %d: %s %s' %
+                         (building_company_user.id, type(e), exstr))
+            continue
+        if building_company_user.instance_id:
+            getPrjInfo1(building_company_user.instance_id)
+
+
 if __name__ == '__main__':
-    getPrjInfo1()
+    getPrjInfo()
