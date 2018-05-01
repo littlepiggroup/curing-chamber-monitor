@@ -1,0 +1,38 @@
+@font-face {
+  font-family: PingFang;
+  src:url("../../assets/font/PingFangFont/PingFangRegular.ttf");
+}
+*{
+  padding: 0;
+  margin: 0;
+  font-family: PingFang;
+  text-decoration: none;
+}
+.themeColor{
+  color:#D05354;
+}
+.themeTitle{
+  font-weight: 600;
+}
+.xinjianIcon{
+  width: 40px!important;
+  height: 40px!important;
+}
+.line_gray{
+  background-color: #ececec;
+  color: #999;
+  margin-top: 0!important;
+  margin-bottom: 0!important;
+}
+.line{
+  width: 100%;
+  height: 5px;
+  background-color: #ececec;
+}
+.icon_css{
+  width: 30px;
+  height: 30px;
+  position: relative;
+  top:4px;
+  margin-right: 5px;
+}
