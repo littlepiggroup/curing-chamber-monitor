@@ -187,16 +187,6 @@ DATABASES = {
     #     'USER': 'root',
     #     'PASSWORD': '123456'
     # }
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        # 'NAME': 'scc4pms',
-        'NAME': 'biaoyangshi',
-        # 'NAME': 'pmstest',
-        'USER': 'zzkj',
-        'PASSWORD': 'zzkj-19881209',
-        'HOST': 'rm-bp142w4w4lxg814kmo.mysql.rds.aliyuncs.com',
-        'PORT': 3306,
-    }
 
 }
 
