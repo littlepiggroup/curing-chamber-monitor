@@ -37,5 +37,6 @@ mysql -u $USER -h $HOST --password=$PASSWORD --database=$DB < $SQL_SCRIPT || exi
 SQL_SCRIPT=pop_test_data.sql
 mysql -u $USER -h $HOST --password=$PASSWORD --database=$DB < $SQL_SCRIPT || exit 1
 
-
-
+# Sync samples which will take a long time !!! 6 minutes
+python manage.py sync_samples
+python manage.py scan_sample_alert

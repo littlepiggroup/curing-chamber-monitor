@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+import thread
 from django.conf import settings
 from django.conf.urls import url,include
 from django.contrib import admin
@@ -22,6 +23,8 @@ from ccmapp.views import index_view
 from ccmauth import admin_urls as user_admin_urls
 from ccmauth import urls as auth_urls
 from django.conf.urls.static import  static
+import logging
+logger = logging.getLogger(__name__)
 
 
 urlpatterns = [
@@ -35,5 +38,9 @@ urlpatterns = [
     # main apis
     url(r'^', include(rest_urls)),
     url(r'^index/', index_view),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_VUX, document_root=settings.STATIC_VUX_ROOT)+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
+#import ccmapp.temperature_humidity_mgr.collect_server as CS
+
+#logger.info('Start socket server.')
+#thread.start_new_thread(CS.start_server,())

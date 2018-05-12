@@ -10,6 +10,11 @@ from ccmapp.models import BuildingCompany
 import xlsxwriter
 import sys
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 def namedtuplefetchall(cursor):
     "Return all rows from a cursor as a namedtuple"
     desc = cursor.description
@@ -50,7 +55,10 @@ def monthly_report_bad_sample(report_duration_days):
         for named_row in named_rows:
             company_id = named_row.company_id
             target_row = id_to_row[company_id]
-            target_row[all_column_names.index(named_row.sample_name)] = named_row.bad_sample_count
+            if named_row.sample_name in all_column_names:
+                target_row[all_column_names.index(named_row.sample_name)] = named_row.bad_sample_count
+            else:
+                logger.warn("Not include such sample: %s", named_row.sample_name)
 
     # Compute bad_sample_total
     for id, row in id_to_row.items():
@@ -177,7 +185,10 @@ def join_report(all_company_id_name, report_duration_days, orderby_score_asc=Tru
         for report in report_list:
             new_row += report[1][company_id][1:]
 
-        total_score = 100 - new_row[-1] - new_row[-3] - new_row[-5]
+        total_score_temp = 100 - new_row[-1] - new_row[-3] - new_row[-5]
+        total_score = 0.0
+        if total_score_temp > 0:
+            total_score = total_score_temp
         new_row.append(total_score)
         rows.append(new_row)
 

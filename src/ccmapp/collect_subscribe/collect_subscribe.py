@@ -9,38 +9,41 @@ from ccmapp.utility import send_mobile_alert_msg
 
 logger = logging.getLogger(__name__)
 
+
 def get_proj_ids_collected_by_user(user_id, collected=True):
 
-    projs_collected_cur_user = UserCollectProject.objects.filter(user_id=user_id)
+    proj_ids = [proj_user.project_id for proj_user in UserCollectProject.objects.filter(user_id=user_id)]
     if collected:
-        return [proj.id for proj in projs_collected_cur_user]
+        return proj_ids
     else:
-        proj_ids = [proj.id for proj in projs_collected_cur_user]
         proj_uncollected = [proj.id for proj in Project.objects.exclude(pk__in=proj_ids)]
         return proj_uncollected
 
 
 def get_proj_ids_followed_by_user(user_id, is_follow=True):
-
-    projs_followed_by_cur_user = UserFollowProject.objects.filter(user_id=user_id)
+    proj_ids = [proj_user.project_id for proj_user in UserFollowProject.objects.filter(user_id=user_id)]
     if is_follow:
-        return [proj.id for proj in projs_followed_by_cur_user]
+        return proj_ids
     else:
-        proj_ids = [proj.id for proj in projs_followed_by_cur_user]
         proj_uncollected = [proj.id for proj in Project.objects.exclude(pk__in=proj_ids)]
         return proj_uncollected
 
 
-def notify_video_alert(video_alert):
+def save_alert_notification(alert):
     # video_alert -> project_id (name) -> send to all followers
-    alert_comment = video_alert.comment
-    project = video_alert.project
+    alert_description = alert.description
+    project = alert.project
     project_id = project.id
-    project_name = project.project_name
-    user_phones = [follow.user.phone for follow in UserFollowProject.objects.filter(project_id=project_id)]
+    project_name = project.project_name[:10]
+    logger.debug('Short project name: %s', project_name)
+    logger.info('Project id for current alert: %s', project_id)
+    user_phones = [follow.user.phone for follow in UserFollowProject.objects.filter(project=project_id)]
+    if len(user_phones) == 0:
+        logger.info("Not found users who are interested in this alert. No need to save notification to DB.")
+
     for phone in user_phones:
-        print 'Send to %s, %s' % (phone, alert_comment)
-        alert_notify = AlertNotification(phone=phone, project_name=project_name, content=alert_comment)
+        logger.info('Save alert notification: %s, %s', phone, alert_description)
+        alert_notify = AlertNotification(phone=phone, project_name=project_name, content=alert_description)
         alert_notify.save()
         # send_mobile_alert_msg(phone, project_name, alert_comment)
 
@@ -65,7 +68,3 @@ def send_alert_short_message():
         except Exception, e:
             print 'TODO : %s' % (str(e))
             logger.error('Failed to send txt message: %s' % str(e))
-
-
-
-

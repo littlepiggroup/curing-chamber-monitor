@@ -2,6 +2,7 @@
 # sudo apt-get install mysql-server
 # sudo apt-get install python-dev
 # sudo apt-get install libmysqlclient-dev
+# https://www.faqforge.com/linux/how-to-install-ffmpeg-on-ubuntu-14-04/
 
 pip install -r requirements.txt
 python manage.py migrate auth

@@ -1,5 +1,11 @@
 # curing chamber monitor
 
+## TODO
+* Upload video
+* project id in video?
+* sample sync up
+* Sensor data collect.
+
 ## Build & Test Status
 * [![Build Status](https://travis-ci.org/littlepiggroup/curing-chamber-monitor.svg?branch=integration)](https://travis-ci.org/littlepiggroup/curing-chamber-monitor)
 
@@ -126,33 +132,44 @@ http://127.0.0.1:8000/api/excel_report
       }
     ```
 ### Report Video alert
+* Get video with its alert. If you wish that one video only has one alert. Just to fetch the first one in alerts property. For example,
+* GET http://127.0.0.1:8000/api/videos?project=1
+    ```json
+    {
+    "id": 1,
+    "camera": null,
+    "alerts":[{"id": 1, "alert_type": 1, "description": "视频报警", "comment": "xinde",…],
+    "video_type": 1,
+    "create_time": "2018-05-08T21:50:13.521652",
+    "save_abs_path": "",
+    "url_path": "media/projects/1/videos/manual_video_2018-05-08_1525816213.mp4",
+    "project":{"id": 1, "instance_id": null, "image_url": "media/projects/1/images/cover.jpg",…}
+    }
+    ```
 * Create Video alert. 
     * POST http://127.0.0.1:8000/api/video_alerts
-    * Body:
+    * Body: If not specify status, its default value is 'CREATED'. 
         ```json
         		{
             "description": "视频报警",
-            "comment": "张三回去处理",
             "video": 1,
             "project": 2,
             "company": 1
         }
         ```
 * Update/Close Video Alert.
-    * Update: PUT http://127.0.0.1:8000/api/video_alerts/1
+    * Update: PATCH http://127.0.0.1:8000/api/video_alerts/1
     * Body:
         ```json
 		{
-          "comment": "xx回去处理",
-          "status":"FIXING",
-          "video":1
+          "comment": "xx去处理",
+          "status":"FIXING"
         }
         ```
-     * Close: PUT http://127.0.0.1:8000/api/video_alerts/1
+     * Close: PATCH http://127.0.0.1:8000/api/video_alerts/1
         {
           "comment": "XX close it",
           "status":"CLOSED",
-          "video":1
         }
 
 ### filter project by company
@@ -164,6 +181,21 @@ http://127.0.0.1:8000/api/sensors?project=1
 ### Get company score report
 * http://127.0.0.1:8000/api/company_score_report?orderby_score_asc=true&time_range=last_month
 * http://127.0.0.1:8000/api/company_score_report?orderby_score_asc=false&time_range=last_month
+
+### Get the sample details from the response data of /api/alerts
+* There one property: source_id. If alert_type is 0, then you can get sample info from URL: /api/sample_alerts/<souce_id>
+
+### Change the alert from the response data of /api/alerts
+* In response of /api/alerts, there are two related properties: alert_id and alert_type.
+* if alert type is 0, then you can PATCH /api/sample_alerts/<alert_id> to change the sample alert.
+* if alert type is 1, then you can PATCH /api/video_alerts/<alert_id>
+* if alert type is 2, then you can PATCH /api/temperature_alerts/<alert_id>
+* if alert type is 3, then you can PATCH /api/temperature_alerts/<alert_id>
+
+### Change sample alert properties
+* Close Sample Alert. 
+    * Request Method and URL: PATCH http://127.0.0.1:8000/api/sample_alerts/1  
+    * Body: ```{ "status":"CLOSED" }```
 
 ## 项目结构
 * curing chamber monitor目录是Django的project, ccm/ccmapp是Django的app. 一个project可以包含多个app.

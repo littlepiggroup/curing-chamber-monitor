@@ -8,7 +8,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import APIException
 
 from ccmapp import models
-from ccmapp.collect_subscribe.collect_subscribe import get_proj_ids_collected_by_user, notify_video_alert
+from ccmapp.collect_subscribe.collect_subscribe import get_proj_ids_collected_by_user, save_alert_notification
 from ccmapp.models import EzvizAccount, Project, Video, Camera, UserCollectProject
 
 logger = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ class UserCollectProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.UserCollectProject
         depth = 1
-
+        fields = '__all__'
 
 class UserFollowProjectSerializer(serializers.ModelSerializer):
     project = serializers.PrimaryKeyRelatedField(many=False, queryset=models.Project.objects.all(), required=True)
@@ -93,6 +93,8 @@ class UserFollowProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.UserFollowProject
         depth = 1
+        fields = '__all__'
+
 
 class SampleSerializer(serializers.ModelSerializer):
     project = serializers.PrimaryKeyRelatedField(many=False, queryset=models.Project.objects.all())
@@ -105,6 +107,7 @@ class SampleSerializer(serializers.ModelSerializer):
 class SampleAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.SampleAlert
+        fields = '__all__'
 
 # ----------------------------- Start: video related code -----------------------------
 class EzvizAccountSerializer(serializers.ModelSerializer):
@@ -135,18 +138,12 @@ class CameraSerializer(serializers.ModelSerializer):
         return created_camera
 
 
-class VideoSerializer(serializers.ModelSerializer):
-    camera = serializers.PrimaryKeyRelatedField(queryset=Camera.objects.all())
-
-    class Meta:
-        model = models.Video
-        fields = '__all__'
-        depth = 1
 
 
 class VideoAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.VideoAlert
+        fields = '__all__'
 
     def create(self, validated_data):
         logger.info('Create video alert')
@@ -157,7 +154,7 @@ class VideoAlertSerializer(serializers.ModelSerializer):
         validated_data['update_time'] = timezone.now()
         video_alert = models.VideoAlert.objects.create(**validated_data)
         video_alert.save()
-        notify_video_alert(video_alert)
+        save_alert_notification(video_alert)
         return video_alert
 
     def update(self, instance, validated_data):
@@ -178,19 +175,33 @@ class VideoAlertSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
+class VideoSerializer(serializers.ModelSerializer):
+    camera = serializers.PrimaryKeyRelatedField(queryset=Camera.objects.all())
+    # alerts = serializers.PrimaryKeyRelatedField(many=True, queryset=models.VideoAlert.objects.all(), required=False)
+    alerts = VideoAlertSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Video
+        fields = '__all__'
+        depth = 1
+
 # ----------------------------- End: video related code -----------------------------
 class SensorSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Sensor
+        fields = '__all__'
 
 class TemperatureAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.TemperatureAlert
+        fields = '__all__'
 
 
 class HumidityAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.HumidityAlert
+        fields = '__all__'
 
 class GlobalReportSerializer(serializers.Serializer):
     project_count = serializers.IntegerField()

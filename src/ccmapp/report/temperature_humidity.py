@@ -12,18 +12,32 @@ def project_sensor_data_series(project_id, sensor_id, days):
                     , ... ]
              "temperature":-100.0, "temperature": -100.0. Responds for no data.
     '''
-    pass
-    sql = '''
-    SELECT
-        ccmapp_temperaturehumiditydata.temperature AS temperature,
-        ccmapp_temperaturehumiditydata.humidity AS humidity,
-        ccmapp_temperaturehumiditydata.temperature > -100.0 AS has_temperature,
-        ccmapp_temperaturehumiditydata.humidity > -1 AS has_humidity,
-        ccmapp_temperaturehumiditydata.collect_time AS collect_time
-    FROM ccmapp_temperaturehumiditydata
-    WHERE project_id = %s AND sensor_id = %s AND TIMESTAMPDIFF(DAY, ccmapp_temperaturehumiditydata.collect_time, NOW()) <= %s
-    ORDER BY collect_time ASC;
-    ''' % (project_id, sensor_id, days)
+    sql = ''
+    if project_id is not None:
+        sql = '''
+        SELECT
+            ccmapp_temperaturehumiditydata.temperature AS temperature,
+            ccmapp_temperaturehumiditydata.humidity AS humidity,
+            ccmapp_temperaturehumiditydata.temperature > -100.0 AS has_temperature,
+            ccmapp_temperaturehumiditydata.humidity > -1 AS has_humidity,
+            ccmapp_temperaturehumiditydata.collect_time AS collect_time
+        FROM ccmapp_temperaturehumiditydata
+        WHERE project_id = %s AND sensor_id = %s AND TIMESTAMPDIFF(DAY, ccmapp_temperaturehumiditydata.collect_time, NOW()) <= %s
+        ORDER BY collect_time ASC;
+        ''' % (project_id, sensor_id, days)
+    else:
+        sql = '''
+        SELECT
+            ccmapp_temperaturehumiditydata.temperature AS temperature,
+            ccmapp_temperaturehumiditydata.humidity AS humidity,
+            ccmapp_temperaturehumiditydata.temperature > -100.0 AS has_temperature,
+            ccmapp_temperaturehumiditydata.humidity > -1 AS has_humidity,
+            ccmapp_temperaturehumiditydata.collect_time AS collect_time
+        FROM ccmapp_temperaturehumiditydata
+        WHERE sensor_id = %s AND TIMESTAMPDIFF(DAY, ccmapp_temperaturehumiditydata.collect_time, NOW()) <= %s
+        ORDER BY collect_time ASC;
+        ''' % (sensor_id, days)
+
     project__sensor_temperature_humidity = []
     with connection.cursor() as cursor:
         cursor.execute(sql)

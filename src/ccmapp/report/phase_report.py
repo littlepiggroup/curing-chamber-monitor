@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from django.db import connection
 
+from ccmapp.collect_subscribe.collect_subscribe import get_proj_ids_collected_by_user
 from ccmapp.models import Project, SampleAlert, VideoAlert, TemperatureAlert, HumidityAlert
 from ccmapp.report.utils import namedtuplefetchall
 
@@ -94,7 +95,7 @@ def get_project_filter_sql(company_id, project_id):
     return sql
 
 
-def company_projects_phase_report(company_id, project_id, days=30):
+def company_projects_phase_report(user_id, company_id, project_id, days=30):
     '''
 
     :param company_id: if -1, all companies.
@@ -103,6 +104,8 @@ def company_projects_phase_report(company_id, project_id, days=30):
     :return: Give company's project list {'project_id': 1, 'score': 60, 'sample_alert_count':1, 'video_alert_count':3,...}
                 order by score ASC
     '''
+    collect_proj_ids = get_proj_ids_collected_by_user(user_id)
+
     project_filter_sql = get_project_filter_sql(company_id, project_id)
     sample_alert_count_map = get_alert_count(project_filter_sql, days, 'ccmapp_samplealert')
     video_alert_count_map = get_alert_count(project_filter_sql, days, 'ccmapp_videoalert')
@@ -119,12 +122,16 @@ def company_projects_phase_report(company_id, project_id, days=30):
         temperature_alert_count = temperature_alert_count_map[proj_id]
         humidity_alert_count = humidity_alert_count_map[proj_id]
 
-        score = 100.0 - (sample_alert_count * 0.5 + video_alert_count * 2.0 + temperature_alert_count * 1.0 + humidity_alert_count * 1.0)
+        score_temp = 100.0 - (sample_alert_count * 0.5 + video_alert_count * 2.0 + temperature_alert_count * 1.0 + humidity_alert_count * 1.0)
+        score = 0.0
+        if score_temp > 0:
+            score = score_temp
         proj_reports.append({
             'id': proj_id,
             'project_name': get_project_name(proj_id),
             'image_url': proj_id_to_project[proj_id].image_url,
             'company_name': proj_id_to_company_name[proj_id],
+            'is_collect': proj_id in collect_proj_ids,
             'score': score,
             'sample_alert_count': sample_alert_count,
             'video_alert_count': video_alert_count,

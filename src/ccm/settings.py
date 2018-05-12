@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import thread
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -139,7 +141,10 @@ INSTALLED_APPS = [
 CRONJOBS = [
     ('0 8 * * *', 'ccmapp.cron.update_samples_task'),
     ('0 9 * * *', 'ccmapp.cron.fetch_video_task'),
-    ('*/5 * * * *', 'ccmapp.cron.send_alert_notification')
+    # ('*/5 * * * *', 'ccmapp.cron.send_alert_notification'),
+    #TODO: should remove it in production.
+    # ('* * * * *', 'ccmapp.cron.mock_temperature_humidity_data_generator')
+
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -179,13 +184,23 @@ WSGI_APPLICATION = 'ccm.wsgi.application'
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
 DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'mydb',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'USER': 'root',
+        'PASSWORD': '123456'
+    }
     # 'default': {
     #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': 'mydb',
-    #     'HOST': '127.0.0.1',
-    #     'PORT': '3306',
-    #     'USER': 'root',
-    #     'PASSWORD': '123456'
+    #     # 'NAME': 'scc4pms',
+    #     'NAME': 'biaoyangshi',
+    #     # 'NAME': 'pmstest',
+    #     'USER': 'zzkj',
+    #     'PASSWORD': 'zzkj-19881209',
+    #     'HOST': 'rm-bp142w4w4lxg814kmo.mysql.rds.aliyuncs.com',
+    #     'PORT': 3306,
     # }
 
 }
@@ -271,7 +286,9 @@ DOCTEMPLATE_DIR=os.path.join(os.path.split(UPLOAD_BASE_DIR)[0], 'doctemplate/' )
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 MEDIA_URL = "/media/"
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+STATIC_VUX = 'src/'
+STATIC_VUX_ROOT = os.path.join(BASE_DIR, 'vuxtest/src/')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = (
     ("css",os.path.join(STATIC_ROOT, 'css')),
     ("js",os.path.join(STATIC_ROOT, 'js')),

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import logging
 import random
 import re
 
@@ -14,7 +15,7 @@ from ccmapp.utility import send_mobile_vcode_msg
 from ccmauth.models import AbstractUser
 
 _pattern = re.compile(r"^((\d{3,4}-)?\d{7,8})$|(1[3-9][0-9]{9})")
-
+logger = logging.getLogger(__name__)
 
 def _phone_validator(phone):
     if not _pattern.match(phone):
@@ -43,13 +44,21 @@ class User(AbstractUser):
         ordering = ('id',)
 
     def _generate_password(self):
-        # TODO: Below code has been tested. Just remove them to enable it.
-        # verify_code = ''
-        # for i in range(6):
-        #     verify_code += str(random.randint(0, 9))
-        # send_mobile_vcode_msg(self.phone, verify_code)
-        # return verify_code
-        return self.phone + "_123456"
+        my_password = "123456"
+        try:
+            verify_code = ''
+            for i in range(6):
+                verify_code += str(random.randint(0, 9))
+            rc = send_mobile_vcode_msg(self.phone, verify_code)
+            if rc:
+                logger.info('Successfully send vcode.')
+                my_password = verify_code
+            else:
+                logger.error('Error when send vcode. Use default  password')
+        except Exception, e:
+            logger.error('Exception when generate password.')
+            logger.exception(e)
+        return my_password
 
     def register_pre_process(self, validate_data):
         validate_data["password"] = self._generate_password()
@@ -62,7 +71,8 @@ class User(AbstractUser):
         validate_data["new_password"] = self._generate_password()
 
     def password_reset_post_process(self):
-        print("%s\n" % self._password)
+        #TODO: shouldn't log password.
+        logger.debug("password: %s", self._password)
 
     def password_reset_password_check(self, raw_password):
         return True  # don't need to verify the password when reset new password
@@ -262,12 +272,12 @@ class SampleAlert(models.Model):
     sample = models.ForeignKey(Sample)
     sample_name = models.CharField(max_length=50, null=True)
     alert_type = models.IntegerField(null=True, default=AlertType.SAMPLE)
-    project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
-    company = models.ForeignKey(BuildingCompany, null=True,on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
     # What's the alert.
-    description = models.CharField(max_length=100, null=True)
+    description = models.CharField(max_length=500, null=True)
     # Comment for current alert processing info.
-    comment = models.CharField(max_length=100, null=True)
+    comment = models.CharField(max_length=500, null=True)
     # Created, fixing, closed.
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=CREATED)
     create_time = models.DateTimeField()
@@ -314,11 +324,19 @@ class Camera(models.Model):
 
 
 class Video(models.Model):
-    camera = models.ForeignKey(Camera, on_delete=models.CASCADE)
-    #In seconds
+    AUTO = 0
+    MANUAL = 1
+    VIDEO_TYPE_CHOICES = (
+        (AUTO, 'Auto'),
+        (MANUAL, 'Manual')
+    )
+    camera = models.ForeignKey(Camera, on_delete=models.CASCADE, null=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True)
+    video_type = models.IntegerField(choices=VIDEO_TYPE_CHOICES, default=AUTO)
+    create_time = models.DateTimeField(auto_now=True)
     save_abs_path = models.CharField(max_length=200)
     # relative url
-    url_path = models.CharField(max_length=50)
+    url_path = models.CharField(max_length=100)
 
     class Meta:
         ordering = ('id',)
@@ -334,15 +352,15 @@ class VideoAlert(models.Model):
         (FIXING, 'fixing'),
         (CLOSED, 'closed'),
     )
-    video = models.ForeignKey(Video, on_delete=models.CASCADE)
+    video = models.ForeignKey(Video, on_delete=models.CASCADE, related_name="alerts")
     project = models.ForeignKey(Project, null=True, on_delete=models.CASCADE)
     company = models.ForeignKey(BuildingCompany, null=True, on_delete=models.CASCADE)
     # auto, manual
     alert_type = models.IntegerField(null=True, default=AlertType.VIDEO)
     # What's the alert.
-    description = models.CharField(max_length=100, null=True)
+    description = models.CharField(max_length=500, null=True)
     # Comment for current alert processing info.
-    comment = models.CharField(max_length=100, null=True)
+    comment = models.CharField(max_length=500, null=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=CREATED)
     created_by = models.ForeignKey(User, related_name='+', null=True)
     updated_by = models.ForeignKey(User, related_name='+', null=True)
@@ -364,7 +382,11 @@ class Sensor(models.Model):
     #TODO: enum -- temperature, humidity.
     sensor_type = models.CharField(max_length=20)
     name = models.CharField(max_length=100)
-    decription = models.CharField(max_length=200)
+    description = models.CharField(max_length=200)
+    temperature_high = models.FloatField()
+    temperature_low = models.FloatField()
+    humidity_high = models.IntegerField()
+    humidity_low = models.IntegerField()
 
 
 
@@ -374,40 +396,56 @@ class TemperatureHumidityData(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     temperature = models.FloatField(default=-100.0)
     humidity = models.IntegerField(default=-1)
-    collect_time = models.DateTimeField()
-    create_time = models.DateTimeField(auto_now_add=True)
+    collect_time = models.DateTimeField(auto_now=True)
+    create_time = models.DateTimeField(auto_now=True)
 
 
 class TemperatureAlert(models.Model):
-    alert_type = models.IntegerField()
+    CREATED = 'CREATED'
+    FIXING = 'FIXING'
+    CLOSED = 'CLOSED'
+    STATUS_CHOICES = (
+        (CREATED, 'created'),
+        (FIXING, 'fixing'),
+        (CLOSED, 'closed'),
+    )
+    alert_type = models.IntegerField(default=AlertType.TEMPERATURE)
     sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
     # What's the alert.
-    description = models.CharField(max_length=100, null=True)
+    description = models.CharField(max_length=500, null=True)
     # Comment for current alert processing info.
-    comment = models.CharField(max_length=100, null=True)
-    status = models.CharField(max_length=10)
-    create_time = models.DateTimeField()
-    created_by = models.CharField(max_length=10)
-    update_time = models.DateTimeField()
-    updated_by = models.CharField(max_length=10)
+    comment = models.CharField(max_length=500, null=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=CREATED)
+    create_time = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=10, default='System')
+    update_time = models.DateTimeField(auto_now=True)
+    updated_by = models.CharField(max_length=10, default='System')
 
 
 class HumidityAlert(models.Model):
-    alert_type = models.IntegerField()
+    CREATED = 'CREATED'
+    FIXING = 'FIXING'
+    CLOSED = 'CLOSED'
+    STATUS_CHOICES = (
+        (CREATED, 'created'),
+        (FIXING, 'fixing'),
+        (CLOSED, 'closed'),
+    )
+    alert_type = models.IntegerField(default=AlertType.HUMIDITY)
     sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     company = models.ForeignKey(BuildingCompany, on_delete=models.CASCADE)
     # What's the alert.
-    description = models.CharField(max_length=100, null=True)
+    description = models.CharField(max_length=500, null=True)
     # Comment for current alert processing info.
-    comment = models.CharField(max_length=100, null=True)
-    status = models.CharField(max_length=10)
-    create_time = models.DateTimeField()
-    created_by = models.CharField(max_length=10)
-    update_time = models.DateTimeField()
-    updated_by = models.CharField(max_length=10)
+    comment = models.CharField(max_length=500, null=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=CREATED)
+    create_time = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=10, default='System')
+    update_time = models.DateTimeField(auto_now=True)
+    updated_by = models.CharField(max_length=10, default='System')
 
 # ----------------------------- End: Temperature/Humidity related models -----------------------------
 
@@ -474,8 +512,10 @@ class BuildingCompanyReport(models.Model):
 class Alert(models.Model):
     company = models.ForeignKey(BuildingCompany, on_delete=models.DO_NOTHING)
     project = models.ForeignKey(Project, on_delete=models.DO_NOTHING)
+    source_id = models.BigIntegerField()
     status = models.CharField(max_length=10)
     is_open = models.BooleanField()
+    alert_id = models.BigIntegerField()
     alert_type = models.IntegerField()
     # What's the alert.
     description = models.CharField(max_length=100, null=True)
@@ -501,7 +541,7 @@ class GlobalReport(object):
 class AlertNotification(models.Model):
     phone = models.CharField(max_length=20)
     project_name = models.CharField(max_length=50)
-    content = models.CharField(max_length=100)
+    content = models.CharField(max_length=500)
     create_time = models.DateTimeField(auto_now=True)
 
     class Meta:

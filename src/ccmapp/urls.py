@@ -38,5 +38,6 @@ urlpatterns += [
     url(r'api/project_score_report', views.ProjectScoreView.as_view()),
     url(r'api/project_sensor_data_series', views.TemperatureHumidityReport.as_view()),
     url(r'api/upload_project_cover', views.UploadProjectImageView.as_view()),
+    url(r'api/upload_project_video', views.UploadProjectVideoView.as_view()),
     url(r'api/excel_report', views.ExcelReportView.as_view())
 ]

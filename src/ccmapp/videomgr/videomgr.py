@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-
+import re
 from datetime import datetime, timedelta
 import random
 import sched
@@ -31,22 +30,41 @@ def transfer_video_to_mp4(origin_file_path, target_folder):
 
 # ----------- Start: logic to save video -----------
 
+def prepare_video_store_info(project_id):
+    target_relative_path = 'projects/' + str(project_id) + '/videos'
+    datetime_now = datetime.now()
+    date_str = str(datetime_now.date())
+    epoch_secs = int((datetime_now - datetime(1970, 1, 1)).total_seconds())
+    file_name = 'video_' + date_str + "_" + str(epoch_secs) + '.mp4'
+    mediamgr.create_sub_dirs(settings.MEDIA_ROOT, target_relative_path)
+    target_file_path = re.sub(r'\$', '', settings.MEDIA_ROOT) + '/' + target_relative_path + '/' + file_name
+    data_map = {
+        'abs_file_path': target_file_path,
+        'url_path': 'media/'+target_relative_path + '/' + file_name
+    }
+    return data_map
 
 def save_to_mp4(rtmp_address, save_path):
     from subprocess import call
     # rtmp_address = 'rtmp://rtmp.open.ys7.com/openlive/bfed2855f58d4dd6891e670060540a7a'
     # save_path = '/home/jichao/somewhere/curing-chamber-monitor/temp/xxxx.mp4'
     duration_seconds = 10
-    cmds = ['ffmpeg', '-t', str(duration_seconds), '-i', rtmp_address, '-acodec', 'copy', '-vcodec', 'copy', save_path]
-    print ' '.join(cmds)
+    #cmds = ['ffmpeg', '-t', str(duration_seconds), '-i', rtmp_address, '-acodec', 'copy', '-vcodec', 'copy', save_path]
+    cmds= ['touch', save_path]
+    cmd_str = ' '.join(cmds)
+    logger.info('Command to save mp4: %s', cmd_str)
     rc = call(cmds)
     if rc != 0:
-        print 'CMD failed!'
+        # TODO Log detailed error
+        logger.error('Saving video failed.')
+    else:
+        logger.info('Save video successfully.')
 
 
 def add_video_object(camera, save_path, url_path):
     from ccmapp.models import Video
-    video = Video(camera=camera, save_abs_path=save_path, url_path=url_path)
+    project = camera.project
+    video = Video(camera=camera, project=project, save_abs_path=save_path, url_path=url_path, video_type=Video.AUTO)
     video.save()
 
 
@@ -61,14 +79,10 @@ def collect():
 
     for camera in cameras:
         rtmp_address = camera.rtmp_address
-        target_relative_path = 'videos'
-        mediamgr.create_sub_dirs(settings.MEDIA_ROOT, target_relative_path)
-        dir_path = settings.MEDIA_ROOT + '/' + target_relative_path
-        save_name = '%s-%s-%s.mp4' % (camera.project.id, camera.device_serial_number, int(time.time()))
-        save_path = dir_path + "/" + save_name
+        path_info = prepare_video_store_info(camera.project_id)
+        save_path = path_info['abs_file_path']
         save_to_mp4(rtmp_address, save_path)
-        url_path = 'media/videos/'+save_name
-        add_video_object(camera, save_path, url_path)
+        add_video_object(camera, save_path, path_info['url_path'])
 
 # ----------- End: logic to save video -----------
 

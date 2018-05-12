@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
+from ccmapp.collect_subscribe.collect_subscribe import save_alert_notification
 from ccmapp.models import Project, Sample, SampleAlert, sample_is_alert
 from django.db.models import Q
 from datetime import datetime
@@ -14,17 +16,17 @@ class AlertScanner(object):
         pass
 
     def scan(self):
-        #TODO: only scan in-progress projects
+        # TODO: only scan in-progress projects
         projects = Project.objects.all()
         for proj in projects:
             samples = Sample.objects.filter(project=proj.id)
             for sample in samples:
                 if sample_is_alert(sample):
                     logger.debug("Got bad sample: %s", sample.id)
-                    #Check SampleAlertTabe
-                    self.update_or_create_alert(sample)
+                    # Check SampleAlertTabe
+                    self.update_or_create_alert(proj, sample)
 
-    def update_or_create_alert(self, sample):
+    def update_or_create_alert(self, project, sample):
         open_alerts = SampleAlert.objects.filter(
             Q(sample=sample.id) &
             (Q(status=SampleAlert.CREATED) | Q(status=SampleAlert.FIXING))
@@ -42,14 +44,17 @@ class AlertScanner(object):
             logger.debug("Create Alert for sample:%s", sample.id)
             now_datetime = datetime.now()
             new_alert = SampleAlert(sample=sample,
+                                    company=project.company,
+                                    sample_name=sample.name,
+                                    project=project,
+                                    description=u'Alert Sample',
+                                    comment=u'Comment',
                                     create_time=now_datetime,
                                     update_time=now_datetime,
                                     status=SampleAlert.CREATED
                                     )
             new_alert.save()
+            save_alert_notification(new_alert)
         else:
             # TODO: should be a internal error
             pass
-
-
-

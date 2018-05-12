@@ -39,6 +39,7 @@ from ccmapp.serializers import EzvizAccountSerializer, CameraSerializer, VideoSe
     HumidityAlertSerializer, SensorSerializer, UserCollectProjectSerializer, ProjectSerializer
 from ccmapp.report import phase_report, temperature_humidity, score, project_score
 import ccmapp.report.utils as report_utils
+from ccmapp.videomgr import videomgr
 from ccmauth.serializers import UserRegisterSerializer, UserPasswordResetSerializer, UserSerializer
 
 
@@ -219,7 +220,7 @@ class VideoViewSet(viewsets.ModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter,)
-    filter_fields = ('camera',)
+    filter_fields = ('camera','project')
 
 
 class VideoAlertViewSet(viewsets.ModelViewSet):
@@ -300,7 +301,8 @@ class ProjectPhaseReportView(APIView):
         #
         # groupby_project = Alert.objects.filter(create_time__lt=end_time, create_time__gt=start_time).values(
         #     'project_id').annotate(alert_count=Count('id'))
-        projects_report = phase_report.company_projects_phase_report(company_id, project_id, days)
+        user_id = request.user.id
+        projects_report = phase_report.company_projects_phase_report(user_id, company_id, project_id, days)
         return Response(normalize_resp(projects_report))
 
 
@@ -331,32 +333,25 @@ class UploadProjectImageView(APIView):
 
 
 # upload video
-class UploadVideoForProject(APIView):
+class UploadProjectVideoView(APIView):
     parser_classes = (MultiPartParser,)
 
     # curl --verbose -X POST -S   -F "project_id=1" -F "file=@img.jpg;type=image/jpg" 127.0.0.1:8000/api/imageUpload
     def post(self, request, format=None):
         up_file = request.FILES['file']
         project_id = request.data['project_id']
-        target_relative_path = 'projects/' + project_id + '/videos'
-        datetime_now = DT.datetime.now()
-        date_str = str(datetime_now.date())
-        epoch_secs = int((datetime_now - DT.datetime(1970, 1, 1)).total_seconds())
-        origin_file_name = up_file.name
-        origin_extension = '.move' # TODO
-        file_name = 'manual_video_' + date_str + "_" + str(epoch_secs) + '.mp4'
-        mediamgr.create_sub_dirs(settings.MEDIA_ROOT, target_relative_path)
-        target_file_path = re.sub(r'\$', '', settings.MEDIA_ROOT) + '/' + target_relative_path + '/' + file_name
+        path_info = videomgr.prepare_video_store_info(project_id)
 
-        destination = open(target_file_path, 'wb+')
+        destination = open(path_info['abs_file_path'], 'wb+')
         for chunk in up_file.chunks():
             destination.write(chunk)
             destination.close()
 
         project = Project.objects.get(pk=int(project_id))
-        project.image_url = 'media/'+target_relative_path + '/' + file_name
-        project.save()
-        resp_data = {'project_id': project_id, 'image_url': project.image_url}
+        video_url = path_info['url_path']
+        video = Video(project=project, url_path=video_url, video_type=Video.MANUAL)
+        video.save()
+        resp_data = {'project_id': project_id, 'url_path': video.url_path}
         return Response(resp_data, status.HTTP_201_CREATED)
 
 

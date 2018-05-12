@@ -51,21 +51,30 @@ class Sync(object):
                 if not building_company_user.instance_id:
                     raw_data = self._get_raw_data(self.user_info_retriever.retrieve(building_company_user.login_name))
                     if raw_data:
+                        logger.info("UserId %s", raw_data[0]['UserId'])
                         building_company_user.instance_id = raw_data[0]["UserId"]
                         updated_building_company_user = True
+                    else:
+                        logger.error("User %s is invalid. continue to next user" % building_company_user.login_name)
+                        continue
+
                 # 还没有关联工程公司, 同步所属工程公司并与之关联 (需要获取合同信息才能得到所属工程公司的信息)
                 if not building_company_user.building_company_id:
                     raw_data = self._get_raw_data(self.project_retriever.retrieve(
                         page_num=1, build_unit_user_id=building_company_user.instance_id))
                     logger.debug("Got project raw data for user %s: %s", building_company_user.login_name, raw_data)
 
-                    intrested_keys = ['_Id', '_ProjectName', '_ProjectNo', '_BuildingReportNumber']
+                    if raw_data is None:
+                        logger.error("Project info for user %s is None", building_company_user.login_name)
 
-                    for i, d in enumerate(raw_data):
-                        for k, v in d.items():
-                            if k in intrested_keys:
-                                logger.debug('Project %s data k,v: %s, %s', i, k, v)
                     if raw_data:
+                        intrested_keys = ['_Id', '_ProjectName', '_ProjectNo', '_BuildingReportNumber']
+
+                        for i, d in enumerate(raw_data):
+                            for k, v in d.items():
+                                if k in intrested_keys:
+                                    logger.debug('Project %s data k,v: %s, %s', i, k, v)
+
                         for project_item in raw_data:
                             contract_raw_data = self._get_raw_data(self.contract_retriever
                                                                    .retrieve(project_id=project_item["_Id"]))

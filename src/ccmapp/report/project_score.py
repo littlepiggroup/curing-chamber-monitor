@@ -165,7 +165,11 @@ def company_projects_total_score(user_id, comp_id, orderby_score_asc=True, days=
         v['project_name'] = project_id_to_name[k]
         v['company_name'] = project_id_to_company_name[k]
         v['is_collect'] = k in collect_proj_ids
-        v['score'] = 100.0 + get_total_score(v)
+        score_temp = 100.0 + get_total_score(v)
+        if score_temp < 0:
+            v['score'] = 0.0
+        else:
+            v['score'] = score_temp
         return v
 
     all_scores = {k: add_score_and_name(k, v) for k, v in all_scores.items()}
