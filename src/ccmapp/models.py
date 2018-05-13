@@ -130,6 +130,7 @@ class Project(models.Model):
     )
 
     company = models.ForeignKey(BuildingCompany,null=True,verbose_name=u'公司单位',blank=True,related_name='projectlist', on_delete=models.CASCADE)
+    disabled = models.BooleanField(default=False)
     instance_id = models.CharField(max_length=100, unique=True, null=True)
     image_url = models.CharField(max_length=100, null=True)
     nature = models.CharField(max_length=20, null=True)
