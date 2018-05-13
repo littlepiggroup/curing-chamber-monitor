@@ -208,7 +208,7 @@ class Sync(object):
 
     def _do_projects_sync(self, raw_data, building_company):
         logger.info("Try to find out registered projects: %s", building_company.name)
-        registered_projects = models.Project.objects.filter(company_id=building_company.id)
+        registered_projects = models.Project.objects.filter(company_id=building_company.id, disabled=False)
         logger.info("Registered projects: %s" % registered_projects)
         registered_projects_by_instance_id = dict([(item.instance_id, item) for item in registered_projects
                                                    if item.instance_id])

@@ -178,6 +178,32 @@ class ProjectViewSet(viewsets.ModelViewSet):
         errors = {'detail': _("Project not followed.")}
         return Response(data=errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @detail_route(methods=['post'], url_path='enable')
+    def enable(self, request, pk=None):
+        try:
+            project = models.Project.objects.get(id=pk)
+        except models.Project.DoesNotExist:
+            errors = {'detail': _("Project not existed.")}
+            return Response(data=errors, status=status.HTTP_400_BAD_REQUEST)
+        if project.disabled:
+            project.disabled = False
+            project.save()
+
+        return Response(status=status.HTTP_200_OK)
+
+    @detail_route(methods=['post'], url_path='disable')
+    def disable(self, request, pk=None):
+        try:
+            project = models.Project.objects.get(id=pk)
+        except models.Project.DoesNotExist:
+            errors = {'detail': _("Project not existed.")}
+            return Response(data=errors, status=status.HTTP_400_BAD_REQUEST)
+        if not project.disabled:
+            project.disabled = True
+            project.save()
+
+        return Response(status=status.HTTP_200_OK)
+
 
 class ProjectNameViewSet(viewsets.ModelViewSet):
     queryset = models.ProjectName.objects.all()
