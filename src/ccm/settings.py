@@ -184,24 +184,24 @@ WSGI_APPLICATION = 'ccm.wsgi.application'
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mydb',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        'USER': 'root',
-        'PASSWORD': '123456'
-    }
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     # 'NAME': 'scc4pms',
-    #     'NAME': 'biaoyangshi',
-    #     # 'NAME': 'pmstest',
-    #     'USER': 'zzkj',
-    #     'PASSWORD': 'zzkj-19881209',
-    #     'HOST': 'rm-bp142w4w4lxg814kmo.mysql.rds.aliyuncs.com',
-    #     'PORT': 3306,
-    # }
+     'default': {
+         'ENGINE': 'django.db.backends.mysql',
+         'NAME': 'mydb',
+         'HOST': '127.0.0.1',
+         'PORT': '3306',
+         'USER': 'root',
+         'PASSWORD': '123456'
+     }
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        # 'NAME': 'scc4pms',
+#        'NAME': 'biaoyangshi',
+#        # 'NAME': 'pmstest',
+#        'USER': 'zzkj',
+#        'PASSWORD': 'zzkj-19881209',
+#        'HOST': 'rm-bp142w4w4lxg814kmo.mysql.rds.aliyuncs.com',
+#        'PORT': 3306,
+#    }
 
 }
 

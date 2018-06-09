@@ -7,6 +7,8 @@ from django.db import connection
 from ccmapp.collect_subscribe.collect_subscribe import get_proj_ids_collected_by_user
 from ccmapp.models import Project, SampleAlert, VideoAlert, TemperatureAlert, HumidityAlert
 from ccmapp.report.utils import namedtuplefetchall
+import logging
+logger=logging.getLogger(__name__)
 
 
 def get_concrete_alert_count(company_id, alert_table, days = 30):
@@ -159,6 +161,7 @@ def get_project_id_to_company_name(proj_ids):
     WHERE ccmapp_project.id in (%s);
     ''' % ','.join([str(id) for id in proj_ids])
     id_to_name  = {}
+    logger.debug("SQL of get_project_id_to_company_name: %s", sql)
     with connection.cursor() as cursor:
         cursor.execute(sql)
         named_rows = namedtuplefetchall(cursor)
@@ -190,8 +193,18 @@ def get_alert_count(project_filter_sql, days, alert_table_name):
     GROUP BY ccmapp_project.id
     ;
         ''' % (project_filter_sql, days)
+    alert_sql = '''
+	SELECT proj.company_id AS company_id, proj.id AS project_id, count(alert.id) AS alert_count 
+    FROM 
+        (SELECT * FROM ccmapp_project WHERE %s) AS proj 
+        LEFT OUTER JOIN 
+        (SELECT * FROM ALERT_TABLE_NAME WHERE (ALERT_TABLE_NAME.create_time IS NULL OR TIMESTAMPDIFF(DAY, ALERT_TABLE_NAME.create_time, NOW()) <= %s))  AS alert 
+        ON proj.id = alert.project_id 
+    GROUP BY proj.id;
+    ''' % (project_filter_sql, days)
 
     actual_sql = alert_sql.replace('ALERT_TABLE_NAME', alert_table_name)
+    logger.debug('SQL of get_alert_count: %s', actual_sql)
 
     project_to_alert_count = {}
     with connection.cursor() as cursor:

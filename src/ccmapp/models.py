@@ -32,7 +32,7 @@ class User(AbstractUser):
         max_length=100,
         unique=True,
         help_text=_('Required. cell phone number.'),
-        validators=[_phone_validator],
+#        validators=[_phone_validator],
         error_messages={
             'unique': _("The phone is already registered."),
         },
@@ -130,7 +130,6 @@ class Project(models.Model):
     )
 
     company = models.ForeignKey(BuildingCompany,null=True,verbose_name=u'公司单位',blank=True,related_name='projectlist', on_delete=models.CASCADE)
-    disabled = models.BooleanField(default=False)
     instance_id = models.CharField(max_length=100, unique=True, null=True)
     image_url = models.CharField(max_length=100, null=True)
     nature = models.CharField(max_length=20, null=True)
@@ -319,6 +318,7 @@ class Camera(models.Model):
     device_serial_number = models.CharField(max_length=50)
     #Like: rtmp://rtmp.open.ys7.com/openlive/bfed2855f58d4dd6891e670060540a7a
     rtmp_address = models.CharField(max_length=200, null=True)
+    http_address = models.CharField(max_length=200, null=True)
 
     class Meta:
         ordering = ('id',)

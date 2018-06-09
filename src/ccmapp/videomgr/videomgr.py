@@ -10,7 +10,7 @@ import requests
 import json
 import logging
 
-import time
+import os,time
 
 from django.conf import settings
 
@@ -37,7 +37,7 @@ def prepare_video_store_info(project_id):
     epoch_secs = int((datetime_now - datetime(1970, 1, 1)).total_seconds())
     file_name = 'video_' + date_str + "_" + str(epoch_secs) + '.mp4'
     mediamgr.create_sub_dirs(settings.MEDIA_ROOT, target_relative_path)
-    target_file_path = re.sub(r'\$', '', settings.MEDIA_ROOT) + '/' + target_relative_path + '/' + file_name
+    target_file_path = re.sub(r'\$', '', settings.MEDIA_ROOT) + target_relative_path + '/' + file_name
     data_map = {
         'abs_file_path': target_file_path,
         'url_path': 'media/'+target_relative_path + '/' + file_name
@@ -49,8 +49,8 @@ def save_to_mp4(rtmp_address, save_path):
     # rtmp_address = 'rtmp://rtmp.open.ys7.com/openlive/bfed2855f58d4dd6891e670060540a7a'
     # save_path = '/home/jichao/somewhere/curing-chamber-monitor/temp/xxxx.mp4'
     duration_seconds = 10
-    #cmds = ['ffmpeg', '-t', str(duration_seconds), '-i', rtmp_address, '-acodec', 'copy', '-vcodec', 'copy', save_path]
-    cmds= ['touch', save_path]
+    cmds = ['ffmpeg', '-t', str(duration_seconds), '-i', rtmp_address, '-acodec', 'copy', '-vcodec', 'copy', save_path]
+    #cmds= ['touch', save_path]
     cmd_str = ' '.join(cmds)
     logger.info('Command to save mp4: %s', cmd_str)
     rc = call(cmds)
@@ -82,7 +82,8 @@ def collect():
         path_info = prepare_video_store_info(camera.project_id)
         save_path = path_info['abs_file_path']
         save_to_mp4(rtmp_address, save_path)
-        add_video_object(camera, save_path, path_info['url_path'])
+	if os.path.exists(save_path):
+            add_video_object(camera, save_path, path_info['url_path'])
 
 # ----------- End: logic to save video -----------
 

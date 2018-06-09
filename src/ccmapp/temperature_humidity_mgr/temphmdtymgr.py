@@ -24,10 +24,11 @@ def collect_save_temperature_humidity_data():
         for sensor in sensors:
             logger.info("Collect data from sensor: %s", sensor.device_number)
             data = collect_sensor_data(sensor)
-            temphmdty = TemperatureHumidityData(company=company, sensor=sensor, project=project,
+	    if data['temperature'] <=100 and data['humidity'] <=100:	
+                temphmdty = TemperatureHumidityData(company=company, sensor=sensor, project=project,
                                                 temperature=data['temperature'], humidity=data['humidity'])
-            temphmdty.save()
-            alert_check(project, sensor, temphmdty)
+                temphmdty.save()
+                alert_check(project, sensor, temphmdty)
         else:
             pass
             # logger.warn("There is no sensors for project: %s", project.project_name)
@@ -54,15 +55,16 @@ def save_sensor_data(data_map):
     temp_float = data_map['temperature']
     humidity_int = data_map['humidity']
     company = project.company
-    temp_humidity_data = TemperatureHumidityData(
-        company=company,
-        project=project,
-        sensor=sensor,
-        temperature=temp_float,
-        humidity=humidity_int
-    )
-    temp_humidity_data.save()
-    alert_check(project, sensor, temp_humidity_data)
+    if data['temperature'] <=100 and data['humidity'] <=100:
+        temp_humidity_data = TemperatureHumidityData(
+            company=company,
+            project=project,
+            sensor=sensor,
+            temperature=temp_float,
+            humidity=humidity_int
+        )
+        temp_humidity_data.save()
+        alert_check(project, sensor, temp_humidity_data)
 
 
 def test_save_sensor_data():

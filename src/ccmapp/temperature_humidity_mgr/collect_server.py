@@ -17,28 +17,54 @@ def parse_raw_data_to_record(raw_data):
     :param raw_data:
     :return:  {'temperature':'xx', 'humidity':'xx', 'device_number':'xxxx'}
     '''
+    from ccmapp.temperature_humidity_mgr.temphmdtymgr import save_sensor_data
     logger.info("Try to parse %s", raw_data)
     project_hex = raw_data[0:2]
-    device_hex = raw_data[2:4]
-    humidity_hex = raw_data[6:10]
-    temp_hex = raw_data[10:14]
+    humidity_hex = raw_data[4:8]
+    temp_hex = raw_data[8:12]
     project_int = int(project_hex, 16)
-    sensor_str = str(int(device_hex, 16))
     temp_float = int(temp_hex, 16)/10.0
     humidity_int = int(humidity_hex, 16)/10
-    data_map = {'project': project_int, 'device_number': sensor_str,
+    data_map = {'project': project_int, 'device_number': str(project_int)+'-1',
                 'temperature': temp_float, 'humidity': humidity_int}
+
+    logger.debug("Data parsed map: %s", data_map)
+    save_sensor_data(data_map)
     return data_map
 
 
-def save_collected_data(raw_data):
+def parse_raw_data_to_record2(raw_data):
+    '''
+
+    :param raw_data:
+    :return:  {'temperature':'xx', 'humidity':'xx', 'device_number':'xxxx'}
+    '''
     from ccmapp.temperature_humidity_mgr.temphmdtymgr import save_sensor_data
-    if raw_data is None or len(raw_data) < 14:
+    logger.info("Try to parse %s", raw_data)
+    project_hex = raw_data[0:2]
+    project_int = int(project_hex, 16)
+    device_hex = raw_data[2:4]
+    
+    for i in range(2,8):
+        temp_hex = raw_data[i*4:(i+1)*4]
+        temp_float = int(temp_hex, 16)/10.0
+        data_map = {'project': project_int, 'device_number': str(project_int)+'-' + str(i),
+                'temperature': temp_float, 'humidity': 0}
+
+    	logger.debug("Data parsed map: %s", data_map)
+    	save_sensor_data(data_map)
+    return data_map
+
+def save_collected_data(raw_data):
+
+    logger.info("***********************" + str(len(raw_data)))
+    if raw_data is None and len(raw_data) != 20 and len(raw_data) != 36:
         logger.warn("Raw data is not valid. Ignore it: %s", raw_data)
         return
-    data_map = parse_raw_data_to_record(raw_data)
-    logger.debug("Data parsed map: %s", data_map)
-    save_sensor_data(data_map)
+    if len(raw_data) == 20:
+        data_map = parse_raw_data_to_record(raw_data)
+    elif len(raw_data) == 36: 
+        data_map = parse_raw_data_to_record2(raw_data)
 
 
 def test_parse_raw_data_to_record():
@@ -52,7 +78,8 @@ def start_server():
     logger.info('Socket accept timeout None')
     web = None
     try:
-        command = '\x01\x03\x00\x00\x00\x06\xC5\xC8'
+        command1 = '\xFF\x03\x00\x00\x00\x02\xD1\xD5'
+        command2 = '\x02\x04\x04\x00\x00\x06\x71\x0B'
         # ip = socket.gethostbyname(socket.gethostname() )
         ip = '0.0.0.0'
         #开启ip和端口
@@ -64,8 +91,8 @@ def start_server():
         #最多连接数
         web.listen(5)
         #等待信息
-        print type(command)
-        print command.encode('hex')
+        print type(command1)
+        print command1.encode('hex')
 
         # Test method: echo -ne '\x01\x01\x0C\x01\x06\x01\x6D\x36\x37\x38\x00'|nc 127.0.0.1 8899
 
@@ -77,10 +104,10 @@ def start_server():
             size = 1024
             try:
                 while True:
-                    logger.info('Send command.')
-                    conn.send(command)
+                    logger.info('Send command1.')
+                    conn.send(command1)
                     time.sleep(1)
-                    logger.debug('Try to receive data.')
+                    logger.debug('Try to receive data1.')
                     data = conn.recv(size)
                     if data:
                         # Set the response to echo back the recieved data
@@ -90,16 +117,37 @@ def start_server():
                         parsed_map = None
                         try:
                             save_collected_data(data_hex)
+			    pass
                         except Exception, parse_e:
                             logger.warn('Got parse error. Ignore it')
                             logger.exception(parse_e)
                         except:
                             logger.error('Unknown error')
-                    else:
-                        sleep_duration = 2
-                        logger.debug('Got nothing. Sleep %d second', sleep_duration)
-                        time.sleep(sleep_duration)
-                        # raise Exception('Client disconnected')
+                    
+                    time.sleep(2)
+                    
+                    logger.info('Send command2.')
+                    conn.send(command2)
+                    time.sleep(1)
+                    logger.debug('try to receive data2')
+                    data = conn.recv(size)
+                    if data:
+                        # Set the response to echo back the recieved data
+                        logger.debug('Got data. Size: %d', len(data))
+                        data_hex = data.encode('hex')
+                        logger.debug("Data hex format: %s", data_hex)
+                        parsed_map = None
+                        try:
+                            save_collected_data(data_hex)
+                            pass
+                        except Exception, parse_e:
+                            logger.warn('Got parse error. Ignore it')
+
+
+                    sleep_duration = 60 
+                    logger.debug('Got nothing. Sleep %d second', sleep_duration)
+                    time.sleep(sleep_duration)
+
             except Exception, e:
                 logger.error('Error and close connection')
                 logger.exception(e)
@@ -123,6 +171,15 @@ class SensorDataHandler(protocol.Protocol):
     def connectionMade(self):
         self.cur_peer = self.transport.getPeer()
         logger.info('Got client: %s' % self.cur_peer)
+        #self.transport.getHandle().sendall('\n')
+        #while True:
+        #    command1 = '\xFF\x03\x00\x00\x00\x02\xD1\xD5'
+        #    command2 = '\x02\x04\x04\x00\x00\x06\x71\x0B'
+        #    logger.debug('send cmd1.')
+        #    self.transport.getHandle().sendall(command1)
+        #    time.sleep(30)
+        #    self.transport.getHandle().sendall(command2)
+        #    time.sleep(10)
 
     def dataReceived(self, data):
         logger.info('Current client: %s' % self.cur_peer)
@@ -145,6 +202,7 @@ class SensorDataHandlerFactory(protocol.Factory):
 def start_twisted_server():
     reactor.listenTCP(8899, SensorDataHandlerFactory())
     reactor.run(installSignalHandlers=0)
+    pass
 
 if __name__ == '__main__':
     start_server()
