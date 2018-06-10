@@ -112,7 +112,6 @@ class Project(models.Model):
     nature = models.CharField(max_length=20, null=True)
     num = models.CharField(max_length=100, null=True)
     region = models.CharField(max_length=100, null=True)
-    address = models.CharField(max_length=256, null=True)
     status = models.IntegerField(null=True)
     create_time = models.DateTimeField(null=True)
     last_edit_time = models.DateTimeField(null=True)

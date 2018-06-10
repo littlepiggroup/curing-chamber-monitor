@@ -206,7 +206,7 @@ class Sync(object):
             exstr = traceback.format_exc()
             logger.error('Sync page %d of projects error: %s %s' % (current_page, type(e), exstr))
 
-    def _do_projects_sync(self, raw_data, building_company):
+    def _do_projects_sync(self, raw_data, building_company, only_registered_projected=False):
         logger.info("Try to find out registered projects: %s", building_company.name)
         registered_projects = models.Project.objects.filter(company_id=building_company.id)
         logger.info("Registered projects: %s" % registered_projects)
@@ -230,9 +230,13 @@ class Sync(object):
                 project = registered_projects_by_instance_id[retrieve_instance_id]
             elif retrieve_name in registered_project_by_name.keys():
                 project = registered_project_by_name[retrieve_name]
-            else:
+            elif only_registered_projected:
                 continue
-            logger.info("Sync project %d" % project.id)
+            else:
+                project = models.Project()
+                logger.info("Add project with install_id %s" % project_item["_Id"])
+            if project.id:
+                logger.info("Sync project %d" % project.id)
             if project.instance_id:
                 pre_project_status = project.status
                 if project.instance_id != project_item["_Id"] or project.status != int(project_item["_ProjectStatus"]):
